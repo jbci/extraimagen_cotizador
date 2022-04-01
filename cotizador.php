@@ -223,14 +223,18 @@ class Cotizador extends Module
             return $min_qty;
         }
     }
+
     private function getCotizadorProductoPlazos($id_product)
     {
-        $request = "SELECT * FROM ps_extraimagen_producto_plazo a
-            LEFT JOIN ps_extraimagen_plazo_entrega b ON a.id_plazo_entrega = b.id_plazo_entrega
-            UNION
-            SELECT * FROM ps_extraimagen_producto_plazo a
-            RIGHT JOIN ps_extraimagen_plazo_entrega b ON a.id_plazo_entrega = b.id_plazo_entrega
-            ORDER BY num_days;";
+        $request = "SELECT * FROM (
+                    SELECT b.*, a.id_product, a.price_factor, a.enabled, a.max_qty FROM ps_extraimagen_producto_plazo a
+                                LEFT JOIN ps_extraimagen_plazo_entrega b ON a.id_plazo_entrega = b.id_plazo_entrega
+                    AND id_product = {$id_product}
+                                UNION
+                                SELECT b.*, a.id_product, a.price_factor, a.enabled, a.max_qty FROM ps_extraimagen_producto_plazo a
+                                RIGHT JOIN ps_extraimagen_plazo_entrega b ON a.id_plazo_entrega = b.id_plazo_entrega
+                    AND id_product = {$id_product}) as s
+                    WHERE id_plazo_entrega IS NOT NULL;";
 
         $result = Db::getInstance()->executeS($request);
         if (!$result) {
@@ -263,6 +267,7 @@ class Cotizador extends Module
             
             $price_factor = Tools::getValue("price_factor_{$id_plazo_entrega}");
             $allow_plazo = Tools::getValue("allow_plazo_{$id_plazo_entrega}");
+            $max_qty = Tools::getValue("max_qty_{$id_plazo_entrega}");
             $enabled = 0;
             if (isset($allow_plazo) && $allow_plazo == 'on'){
                 $enabled = 1;
@@ -275,6 +280,7 @@ class Cotizador extends Module
                 $result = Db::getInstance()->update('extraimagen_producto_plazo', [
                     'price_factor' => floatval($price_factor),
                     'enabled' => (int)$enabled,
+                    'max_qty' => (int)$max_qty,
                 ], "id_product = {$params_id_product} AND id_plazo_entrega = {$id_plazo_entrega}", 1, true);
                 if (!$result) {
                     $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
@@ -284,6 +290,7 @@ class Cotizador extends Module
                     'id_product' => (int)$params_id_product,
                     'id_plazo_entrega' => (int)$id_plazo_entrega,
                     'price_factor' => floatval($price_factor),
+                    'max_qty' => (int)$max_qty,
                     'enabled' => (int)$enabled,
                 ]);
                 if (!$result) {
@@ -295,36 +302,20 @@ class Cotizador extends Module
 
     }
 
-
     private function getPlazoIds()
     {
-        Logger::addLog("getPlazoIds start");
         $query = "SELECT id_plazo_entrega FROM " . _DB_PREFIX_ . "extraimagen_plazo_entrega LIMIT 100;";
-        Logger::addLog("query:{$query}");
-        $results = Db::getInstance()->execute($query);
-        Logger::addLog("post query");
-        Logger::addLog("results: {strval($results)}");
+        $results = Db::getInstance()->executeS($query);
+        $ids = [];
         if (!$results) {
-            Logger::addLog("error query");
             $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
         } else {
-            Logger::addLog("ok query");
-            Logger::addLog("ok query_2");
-            // $num_rows = $results->numRows();
-            // Logger::addLog("num_rows: {$num_rows}");
-
-            // foreach ($results as $result) {
-            //     Logger::addLog("ok foreach 1");
-            //     foreach ($result as $field) {
-            //         Logger::addLog("ok foreach 2");
-            //         Logger::addLog($field);
-            //     }
-            // }
+            $ids = array_map(function ($row) {
+                return $row['id_plazo_entrega'];
+            }, $results);
         }
 
-        return [1,2,3,4,5];
-
-
+        return $ids;
     }
 
     private function updateCotizadorProducto($id_product, $enabled, $min_qty)
@@ -332,9 +323,8 @@ class Cotizador extends Module
         // Logger::addLog("allow_cotizador: {$enabled} ");
 
         $query = "SELECT count(id_cotizador_producto) FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
-        // Logger::addLog("query: {$query} ");
-
         $queryCount = (int)Db::getInstance()->getValue($query);
+
         if ($queryCount > 0) {
             $result = Db::getInstance()->update('extraimagen_cotizador_producto', [
                 'enabled' => (int)$enabled,
@@ -352,7 +342,6 @@ class Cotizador extends Module
             if (!$result) {
                 $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
             }
-            
         }
     }
     

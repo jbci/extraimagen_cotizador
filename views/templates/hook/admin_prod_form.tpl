@@ -23,10 +23,13 @@
                         Habilitado
                     </td>
                     <td>
-                        Descripción
+                        
                     </td>
                     <td>
                         Factor Incremento
+                    </td>
+                    <td>
+                        Cantidad Máxima
                     </td>
                 </tr>
             </th>
@@ -48,14 +51,13 @@
                         <input name="price_factor{$id_plazo_entrega}" id="price_factor{$id_plazo_entrega}" class="form-control" value="{$plazo["price_factor"]}" required></input>
                     </td>
                     <td>
-                        {foreach from=$plazo key=k item=v}
-                            {$k}: {$v} 
-                        {/foreach}
+                        <input name="max_qty{$id_plazo_entrega}" id="max_qty{$id_plazo_entrega}" class="form-control" value="{$plazo["max_qty"]}" required></input>
                     </td>
                 </tr>
             {/foreach}
         </table>
     </div>
+    
     <button type="submit" class="btn btn-default button-medium" name="submit_admin_cotizador" id="submit_admin_cotizador">
         <span>Guardar <i class="icon-chevron-right right"></i></span>
     </button>

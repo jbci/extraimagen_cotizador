@@ -97,7 +97,7 @@ class Installer
             ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_plazo`(
                 `id` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                `id_plazo_entrega` INT(10), `id_product` INT(10), `price_factor` DOUBLE, `enabled` INT(1)
+                `id_plazo_entrega` INT(10), `id_product` INT(10), `price_factor` DOUBLE, `enabled` INT(1), `max_qty` INT(10)
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_tipo_trabajo`(
                 `id_tipo_trabajo` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
