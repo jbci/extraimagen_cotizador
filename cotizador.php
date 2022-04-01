@@ -15,7 +15,7 @@ class Cotizador extends Module
         $this->name = 'cotizador';
         $this->tab = 'other';
         $this->version = '0.0.1';
-        $this->author = 'pedregalux jbci';
+        $this->author = 'jbci';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
             'min' => '1.7.1',
@@ -37,7 +37,6 @@ class Cotizador extends Module
 
     public function install()
     {
-        Logger::addLog("Start cotizador install()");
         if (Shop::isFeatureActive()) {
             Shop::setContext(Shop::CONTEXT_ALL);
         }
@@ -177,7 +176,7 @@ class Cotizador extends Module
             'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display')
         ]);
 
-        if ($this->getCotizadorProducto($id_product)) {
+        if ($this->getCotizadorProductoEnabled($id_product)) {
             return $this->display(__FILE__, 'cotizador.tpl');
         }
         // return $this->display(__FILE__, 'cotizador.tpl');
@@ -188,42 +187,80 @@ class Cotizador extends Module
         $id_product = (int)$params['id_product'];
         if (Validate::isLoadedObject($product = new Product($id_product))) {
             $checked = "";
-            if ($this->getCotizadorProducto($id_product)) {
+            if ($this->getCotizadorProductoEnabled($id_product)) {
                 $checked = "checked";
             }
+            
             $this->context->smarty->assign([
-                'allow_cotizador' => $this->getCotizadorProducto($id_product),
+                'allow_cotizador' => $checked,
+                'min_qty' => $this->getCotizadorProductoMinQty($id_product),
+                'prod_plazos' => $this->getCotizadorProductoPlazos($id_product),
             ]);
-            return $this->display(__FILE__, 'admin_prod_form.tpl');
 
+            return $this->display(__FILE__, 'admin_prod_form.tpl');
         }
     }
-    public function getCotizadorProducto($id_product)
+
+    private function getCotizadorProductoEnabled($id_product)
     {
         $request = "SELECT enabled FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
 
         $is_enabled = Db::getInstance()->getValue($request);
-        Logger::addLog("is_enabled: {$is_enabled} ");
         if (!$is_enabled or $is_enabled == 0) {
-            Logger::addLog("false or zero: {$is_enabled} ");
             return false;
         } else {
-            Logger::addLog("true or one: {$is_enabled} ");
             return true;
+        }
+    }
+    private function getCotizadorProductoMinQty($id_product)
+    {
+        $request = "SELECT min_qty FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
+
+        $min_qty = Db::getInstance()->getValue($request);
+        if (!$min_qty) {
+            return false;
+        } else {
+            return $min_qty;
+        }
+    }
+    private function getCotizadorProductoPlazos($id_product)
+    {
+        $request = "SELECT * FROM ps_extraimagen_producto_plazo a
+            LEFT JOIN ps_extraimagen_plazo_entrega b ON a.id_plazo_entrega = b.id_plazo_entrega
+            UNION
+            SELECT * FROM ps_extraimagen_producto_plazo a
+            RIGHT JOIN ps_extraimagen_plazo_entrega b ON a.id_plazo_entrega = b.id_plazo_entrega
+            ORDER BY num_days;";
+
+        $result = Db::getInstance()->executeS($request);
+        if (!$result) {
+            $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+        } else {
+            return $result;
         }
     }
 
     public function hookActionProductUpdate($params)
     {
-        
+        Logger::addLog("cotizador hookActionProductUpdate start: ");
+
         $params_id_product = (int)$params['id_product'];
-        Logger::addLog("params: {$params_id_product} ");
+        Logger::addLog("cotizador hookActionProductUpdate params: {$params_id_product} ");
 
         $allow_cotizador = (int)Tools::getValue('allow_cotizador');
-        $this-> updateCotizadorProducto($params_id_product, $allow_cotizador);
+        $min_qty = (int)Tools::getValue('min_qty', 1);
+
+        $price_factor_1 = (int)Tools::getValue('price_factor_1');
+        Logger::addLog("cotizador hookActionProductUpdate price_factor_1: {$price_factor_1} ");
+        $allow_plazo_1 = Tools::getValue('allow_plazo_1');
+        Logger::addLog("cotizador hookActionProductUpdate allow_plazo_1: {$allow_plazo_1} ");
+        $allow_plazo_2 = Tools::getValue('allow_plazo_2');
+        Logger::addLog("cotizador hookActionProductUpdate allow_plazo_2: {$allow_plazo_2} ");
+
+        $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty);
     }
 
-    public function updateCotizadorProducto($id_product, $enabled)
+    public function updateCotizadorProducto($id_product, $enabled, $min_qty)
     {
         // Logger::addLog("allow_cotizador: {$enabled} ");
 
@@ -234,6 +271,7 @@ class Cotizador extends Module
         if ($queryCount > 0) {
             $result = Db::getInstance()->update('extraimagen_cotizador_producto', [
                 'enabled' => (int)$enabled,
+                'min_qty' => (int)$min_qty,
             ], "id_product = {$id_product}", 1, true);
             if (!$result) {
                 $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
@@ -242,6 +280,7 @@ class Cotizador extends Module
             $result = Db::getInstance()->insert('extraimagen_cotizador_producto', [
                 'id_product' => (int)$id_product,
                 'enabled' => (int)$enabled,
+                'min_qty' => (int)$min_qty,
             ]);
             if (!$result) {
                 $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();

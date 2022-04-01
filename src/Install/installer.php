@@ -89,11 +89,72 @@ class Installer
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`(
                 `id_cotizador_producto` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                `id_product` INT(10), `enabled` INT(1)
+                `id_product` INT(10), `enabled` INT(1), `min_qty` INT(10)
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_plazo_entrega`(
+                `id_plazo_entrega` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `description` VARCHAR(256), `num_days` INT(10)
+            ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_plazo`(
+                `id` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `id_plazo_entrega` INT(10), `id_product` INT(10), `price_factor` DOUBLE, `enabled` INT(1)
+                ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_tipo_trabajo`(
+                `id_tipo_trabajo` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `description` VARCHAR(256)
+            ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
         ];
 
-        return $this->executeQueries($queries);
+        return ($this->executeQueries($queries) && $this->populateDatabase());
+    }
+
+    private function populateDatabase(): bool
+    {
+        $result_1 = Db::getInstance()->insert(
+            'extraimagen_plazo_entrega',
+            [
+                [
+                    'description' => 'super express',
+                    'num_days' => 1,
+                ],
+                [
+                    'description' => 'express',
+                    'num_days' => 3,
+                ],
+                [
+                    'description' => 'normal',
+                    'num_days' => 5,
+                ],
+                [
+                    'description' => 'semanal',
+                    'num_days' => 7,
+                ],
+                [
+                    'description' => 'quincenal',
+                    'num_days' => 15,
+                ],
+            ]
+        );
+
+        $result_2 = Db::getInstance()->insert(
+            'extraimagen_tipo_trabajo',
+            [
+                [
+                    'description' => '1 color',
+                ],
+                [
+                    'description' => '2 colores',
+                ],
+                [
+                    'description' => 'full color',
+                ],
+                [
+                    'description' => 'grabado laser',
+                ],
+            ]
+        );
+
+        return ($result_1 && $result_2);
     }
 
     /**
@@ -106,6 +167,9 @@ class Installer
         $queries = [
             "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`",
             "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_solicitud_cotizacion`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_plazo_entrega`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_plazo`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_tipo_trabajo`",
         ];
 
         return $this->executeQueries($queries);
