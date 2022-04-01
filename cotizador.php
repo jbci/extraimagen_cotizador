@@ -242,25 +242,92 @@ class Cotizador extends Module
 
     public function hookActionProductUpdate($params)
     {
-        Logger::addLog("cotizador hookActionProductUpdate start: ");
 
         $params_id_product = (int)$params['id_product'];
-        Logger::addLog("cotizador hookActionProductUpdate params: {$params_id_product} ");
 
         $allow_cotizador = (int)Tools::getValue('allow_cotizador');
         $min_qty = (int)Tools::getValue('min_qty', 1);
 
-        $price_factor_1 = (int)Tools::getValue('price_factor_1');
-        Logger::addLog("cotizador hookActionProductUpdate price_factor_1: {$price_factor_1} ");
-        $allow_plazo_1 = Tools::getValue('allow_plazo_1');
-        Logger::addLog("cotizador hookActionProductUpdate allow_plazo_1: {$allow_plazo_1} ");
-        $allow_plazo_2 = Tools::getValue('allow_plazo_2');
-        Logger::addLog("cotizador hookActionProductUpdate allow_plazo_2: {$allow_plazo_2} ");
-
         $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty);
+        $this-> updateProductoPlazo($params);
     }
 
-    public function updateCotizadorProducto($id_product, $enabled, $min_qty)
+    private function updateProductoPlazo($params)
+    {
+        // Logger::addLog("updateProductoPlazo start: ");
+
+        $params_id_product = (int)$params['id_product'];
+
+        $this->getPlazoIds();
+        foreach ($this->getPlazoIds() as $id_plazo_entrega) {
+            
+            $price_factor = Tools::getValue("price_factor_{$id_plazo_entrega}");
+            $allow_plazo = Tools::getValue("allow_plazo_{$id_plazo_entrega}");
+            $enabled = 0;
+            if (isset($allow_plazo) && $allow_plazo == 'on'){
+                $enabled = 1;
+            }
+            
+            $query = "SELECT count(id) FROM `" . _DB_PREFIX_ . "extraimagen_producto_plazo` WHERE id_product = {$params_id_product} and id_plazo_entrega = {$id_plazo_entrega};";
+            $queryCount = (int)Db::getInstance()->getValue($query);
+
+            if ($queryCount > 0) {
+                $result = Db::getInstance()->update('extraimagen_producto_plazo', [
+                    'price_factor' => floatval($price_factor),
+                    'enabled' => (int)$enabled,
+                ], "id_product = {$params_id_product} AND id_plazo_entrega = {$id_plazo_entrega}", 1, true);
+                if (!$result) {
+                    $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+                }
+            } else {
+                $result = Db::getInstance()->insert('extraimagen_producto_plazo', [
+                    'id_product' => (int)$params_id_product,
+                    'id_plazo_entrega' => (int)$id_plazo_entrega,
+                    'price_factor' => floatval($price_factor),
+                    'enabled' => (int)$enabled,
+                ]);
+                if (!$result) {
+                    $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+                }
+                
+            }
+        }
+
+    }
+
+
+    private function getPlazoIds()
+    {
+        Logger::addLog("getPlazoIds start");
+        $query = "SELECT id_plazo_entrega FROM " . _DB_PREFIX_ . "extraimagen_plazo_entrega LIMIT 100;";
+        Logger::addLog("query:{$query}");
+        $results = Db::getInstance()->execute($query);
+        Logger::addLog("post query");
+        Logger::addLog("results: {strval($results)}");
+        if (!$results) {
+            Logger::addLog("error query");
+            $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+        } else {
+            Logger::addLog("ok query");
+            Logger::addLog("ok query_2");
+            // $num_rows = $results->numRows();
+            // Logger::addLog("num_rows: {$num_rows}");
+
+            // foreach ($results as $result) {
+            //     Logger::addLog("ok foreach 1");
+            //     foreach ($result as $field) {
+            //         Logger::addLog("ok foreach 2");
+            //         Logger::addLog($field);
+            //     }
+            // }
+        }
+
+        return [1,2,3,4,5];
+
+
+    }
+
+    private function updateCotizadorProducto($id_product, $enabled, $min_qty)
     {
         // Logger::addLog("allow_cotizador: {$enabled} ");
 
