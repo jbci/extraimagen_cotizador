@@ -131,6 +131,7 @@ class Cotizador extends Module
 
     public function hookDisplayAfterProductThumbs($params)
     {
+        Logger::addLog("hookDisplayAfterProductThumbs => started");
         $id_product = Tools::getValue('id_product');
         if (Tools::isSubmit('submit_cotizador')) {
             $email = Tools::getValue('email');
@@ -169,17 +170,21 @@ class Cotizador extends Module
             // Logger::addLog($total);
 
         }
-
+        Logger::addLog("hookDisplayAfterProductThumbs => 1");
         $this->context->smarty->assign([
             'cotizador_message' => Configuration::get('COTIZADOR_MESSAGE'),
             'cotizador_name' => Configuration::get('COTIZADOR_NAME'),
             'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display')
         ]);
-
+        Logger::addLog("hookDisplayAfterProductThumbs => 2");
+        Logger::addLog("hookDisplayAfterProductThumbs id_product=> {$id_product}");
         if ($this->getCotizadorProductoEnabled($id_product)) {
+            Logger::addLog("steps should be added!");
+            // return $this->display(__FILE__, 'steps_cotizador.tpl');
             return $this->display(__FILE__, 'cotizador.tpl');
         }
-        // return $this->display(__FILE__, 'cotizador.tpl');
+        // Logger::addLog("hookDisplayAfterProductThumbs => end");
+        return $this->display(__FILE__, 'steps_cotizador.tpl');
     }
 
     public function hookDisplayAdminProductsExtra($params)
@@ -246,14 +251,17 @@ class Cotizador extends Module
 
     public function hookActionProductUpdate($params)
     {
+        $accept_value =(int)Tools::getValue('accept');
+        if (isset($accept_value) and $accept_value == 1) {
+            $accept_value =Tools::getValue('accept');
+            $params_id_product = (int)$params['id_product'];
 
-        $params_id_product = (int)$params['id_product'];
+            $allow_cotizador = (int)Tools::getValue('allow_cotizador');
+            $min_qty = (int)Tools::getValue('min_qty', 1);
 
-        $allow_cotizador = (int)Tools::getValue('allow_cotizador');
-        $min_qty = (int)Tools::getValue('min_qty', 1);
-
-        $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty);
-        $this-> updateProductoPlazo($params);
+            $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty);
+            $this-> updateProductoPlazo($params);
+        }
     }
 
     private function updateProductoPlazo($params)

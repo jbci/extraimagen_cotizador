@@ -4,7 +4,7 @@
     <displayName><![CDATA[Cotizador de Trabajos ExtraImagen]]></displayName>
     <version><![CDATA[0.0.1]]></version>
     <description><![CDATA[M&oacute;dulo de cotizaci&oacute;n de ExtraImagen.]]></description>
-    <author><![CDATA[pedregalux jbci]]></author>
+    <author><![CDATA[jbci]]></author>
     <tab><![CDATA[other]]></tab>
 	<confirmUninstall><![CDATA[Are you sure you want to uninstall?]]></confirmUninstall>
     <is_configurable>1</is_configurable>

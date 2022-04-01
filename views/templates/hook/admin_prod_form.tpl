@@ -57,6 +57,12 @@
             {/foreach}
         </table>
     </div>
+    <div class="form-group">
+        <label for="accept_changes">
+            <h2>{l s='Aceptar cambios:' mod='cotizador'}</h2>
+        </label>
+        <input type="checkbox" name="accept" id="accept" class="form-control" value="1" >
+    </div>
     
     <button type="submit" class="btn btn-default button-medium" name="submit_admin_cotizador" id="submit_admin_cotizador">
         <span>Guardar <i class="icon-chevron-right right"></i></span>
