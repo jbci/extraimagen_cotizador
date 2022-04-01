@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>cotizador</name>
+    <displayName><![CDATA[Cotizador de Trabajos ExtraImagen]]></displayName>
+    <version><![CDATA[0.0.1]]></version>
+    <description><![CDATA[M&oacute;dulo de cotizaci&oacute;n de ExtraImagen.]]></description>
+    <author><![CDATA[pedregalux jbci]]></author>
+    <tab><![CDATA[other]]></tab>
+	<confirmUninstall><![CDATA[Are you sure you want to uninstall?]]></confirmUninstall>
+    <is_configurable>1</is_configurable>
+    <need_instance>0</need_instance>
+	<limited_countries></limited_countries>
+</module>

@@ -45,44 +45,15 @@ class Cotizador extends Module
         
         return (parent::install()
             && $installer->install($this));
-
-        // $sql = "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "cotizaciones_extraimagen`(
-        // `id_cotizacion` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        // `email` VARCHAR(128), `phone` VARCHAR(15), `id_product` INT(10), 
-        // `qty` INT(11), `days` INT(11), `colors` INT(11), `comment` varchar(512), `allow` INT(1),
-        // `file` VARCHAR(256), `datetime` DATETIME NOT NULL default CURRENT_TIMESTAMP)";
-
-        // if (!$result = Db::getInstance()->Execute($sql))
-        //     return false;
-
-        // return (parent::install()
-        //     && $this->registerHook('displayAfterProductThumbs')
-        //     && $this->registerHook('displayAdminProductsExtra')
-        //     && $this->registerHook('actionProductUpdate')
-        //     && Configuration::updateValue('COTIZADOR_NAME', 'ExtraImagen')
-        //     && Configuration::updateValue('COTIZADOR_MESSAGE', 'Este mensaje se mostrará en el cotizador y debe configurarse en el administrador')
-        // );
+            
     }
-
-    //     CREATE TABLE IF NOT EXISTS `ps_cotizaciones_extraimagen`(
-    //         `id_cotizacion` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    //         `email` VARCHAR(256), `phone` VARCHAR(10), `id_product` INT(11), 
-    //         `qty` INT(11), `days` INT(11), `colors` INT(11), `comment` INT(11))
-    // --DROP TABLE IF EXISTS ps_cotizaciones_extraimagen
 
     public function uninstall()
     {
-        Logger::addLog(_DB_PREFIX_);
-
-        $sql = "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "cotizaciones_extraimagen`";
-
-        if (!$result = Db::getInstance()->Execute($sql))
-            return false;
-
+        $installer = new Installer();
+        
         return (parent::uninstall()
-            && Configuration::deleteByName('COTIZADOR_NAME')
-            && Configuration::deleteByName('COTIZADOR_MESSAGE')
-        );
+            && $installer->uninstall());
     }
 
     /**
@@ -161,25 +132,15 @@ class Cotizador extends Module
 
     public function hookDisplayAfterProductThumbs($params)
     {
+        $id_product = Tools::getValue('id_product');
         if (Tools::isSubmit('submit_cotizador')) {
-            //form proccessing
-            // Logger::addLog('Test log form processing 1 ');
             $email = Tools::getValue('email');
-            // Logger::addLog($email);
             $phone = Tools::getValue('phone');
-            // Logger::addLog($phone);
             $days = (int)Tools::getValue('days');
-            // Logger::addLog($days);
             $qty = (int)Tools::getValue('qty');
-            // Logger::addLog($qty);
             $colors = (int)Tools::getValue('colors');
-            // Logger::addLog($colors);
             $comment = Tools::getValue('comment');
-            // Logger::addLog($comment);
             $allow = (int)Tools::getValue('email_allow');
-            // Logger::addLog($allow);
-            // $file = Tools::getValue('file');
-            // Logger::addLog($file);
 
             $id_product = Tools::getValue('id_product');
 
@@ -192,18 +153,19 @@ class Cotizador extends Module
                 'colors' => (int)$colors,
                 'allow' => (int)$allow,
                 'file' => "file",
-                // 'date' => date('Y-m-d H:i:s'),
                 'comment' => $comment,
             );
 
-            $result = Db::getInstance()->insert('cotizaciones_extraimagen', $insert);
+            $result = Db::getInstance()->insert('extraimagen_solicitud_cotizacion', $insert);
 
             $product = new Product($id_product);
-            $price = floatval($product->price);
+            Logger::addLog("id_product => {$id_product}");
+            $float_price = floatval($product->price);
+            $price = $product->price;
             // $price = $product->getPrice();
             Logger::addLog($price);
-            Logger::addLog($price);
-            Logger::addLog($price);
+            // Logger::addLog($price);
+            // Logger::addLog($price);
             $total = $price * $qty;
             // Logger::addLog($total);
 
@@ -214,93 +176,80 @@ class Cotizador extends Module
             'cotizador_name' => Configuration::get('COTIZADOR_NAME'),
             'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display')
         ]);
-        return $this->display(__FILE__, 'cotizador.tpl');
+
+        if ($this->getCotizadorProducto($id_product)) {
+            return $this->display(__FILE__, 'cotizador.tpl');
+        }
+        // return $this->display(__FILE__, 'cotizador.tpl');
     }
 
     public function hookDisplayAdminProductsExtra($params)
     {
+        $id_product = (int)$params['id_product'];
+        if (Validate::isLoadedObject($product = new Product($id_product))) {
+            $checked = "";
+            if ($this->getCotizadorProducto($id_product)) {
+                $checked = "checked";
+            }
+            $this->context->smarty->assign([
+                'allow_cotizador' => $this->getCotizadorProducto($id_product),
+            ]);
+            return $this->display(__FILE__, 'admin_prod_form.tpl');
 
-        if (Tools::isSubmit('submit_admin_cotizador')) {
-            Logger::addLog("form submitted hookDisplayAdminProductsExtra");
         }
-        dump($params);
-        $product_id = (int)Tools::getValue('id_product');
-        Logger::addLog("started hookDisplayAdminProductsExtra");
-        Logger::addLog($params['id_product']);
-        
-        // foreach ($params as $clave => $valor) {
-        //     // $array[3] se actualizará con cada valor de $array...
-        //     Logger::addLog("{$clave} => {$valor} ");
-        //     print_r($array);
-        // }
+    }
+    public function getCotizadorProducto($id_product)
+    {
+        $request = "SELECT enabled FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
 
-        if (Validate::isLoadedObject($product = new Product((int)$params['id_product']))) {
-
-        Logger::addLog("hookDisplayAdminProductsExtra inside if");
-        // return $this->display(__FILE__, 'newfieldstut.tpl');
-            // return $this->displayForm();
+        $is_enabled = Db::getInstance()->getValue($request);
+        Logger::addLog("is_enabled: {$is_enabled} ");
+        if (!$is_enabled or $is_enabled == 0) {
+            Logger::addLog("false or zero: {$is_enabled} ");
+            return false;
+        } else {
+            Logger::addLog("true or one: {$is_enabled} ");
+            return true;
         }
-        // $this->context->smarty->assign([
-        //     'cotizador_message' => Configuration::get('COTIZADOR_MESSAGE'),
-        //     'cotizador_name' => Configuration::get('COTIZADOR_NAME'),
-        //     'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display')
-        // ]);
-        return $this->display(__FILE__, 'admin_prod_form.tpl');
     }
 
     public function hookActionProductUpdate($params)
     {
-        // get all languages
-        // for each of them, store the new field
-        $id_product = (int)Tools::getValue('id_product');
-        Logger::addLog("hookActionProductUpdate started ");
-        // Logger::addLog($params['id_product']);
-        // foreach ($params as $clave => $valor) {
-        //     // $array[3] se actualizará con cada valor de $array...
-        //     Logger::addLog("{$clave} =>  ");
-        //     $val = strval($valor);
-        //     Logger::addLog("{$clave} => {$val} ");
-        //     // print_r($array);
-        // }
-        // Logger::addLog($id_product);
-        // $languages = Language::getLanguages(true);
-        // foreach ($languages as $lang) {
-        //     if(!Db::getInstance()->update('product_lang', array('custom_field'=> pSQL(Tools::getValue('custom_field_'.$lang['id_lang']))) ,'id_lang = ' . $lang['id_lang'] .' AND id_product = ' .$id_product ))
-        //         $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
-        // }
+        
+        $params_id_product = (int)$params['id_product'];
+        Logger::addLog("params: {$params_id_product} ");
+
+        $allow_cotizador = (int)Tools::getValue('allow_cotizador');
+        $this-> updateCotizadorProducto($params_id_product, $allow_cotizador);
+    }
+
+    public function updateCotizadorProducto($id_product, $enabled)
+    {
+        // Logger::addLog("allow_cotizador: {$enabled} ");
+
+        $query = "SELECT count(id_cotizador_producto) FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
+        // Logger::addLog("query: {$query} ");
+
+        $queryCount = (int)Db::getInstance()->getValue($query);
+        if ($queryCount > 0) {
+            $result = Db::getInstance()->update('extraimagen_cotizador_producto', [
+                'enabled' => (int)$enabled,
+            ], "id_product = {$id_product}", 1, true);
+            if (!$result) {
+                $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+            }
+        } else {
+            $result = Db::getInstance()->insert('extraimagen_cotizador_producto', [
+                'id_product' => (int)$id_product,
+                'enabled' => (int)$enabled,
+            ]);
+            if (!$result) {
+                $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+            }
+            
+        }
+    }
     
-    }
-    /*
-
-    public function hookDisplayHome($params)
-    {
-        $this->context->smarty->assign([
-            'cotizador_name' => Configuration::get('COTIZADOR_NAME'),
-            'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display')
-        ]);
-
-        /*
-        return $this->setTemplate('module:cotizador/views/templates/hook/cotizador.tpl');
-         
-        return $this->display(__FILE__, 'cotizador.tpl');
-    }
-
-    public function hookDisplayLeftColumn($params)
-    {
-        $this->context->smarty->assign([
-            'cotizador_name' => Configuration::get('COTIZADOR_NAME'),
-            'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display')
-        ]);
-
-        return $this->display(__FILE__, 'cotizador.tpl');
-    }
-
-    public function hookDisplayRightColumn($params)
-    {
-        return $this->hookDisplayLeftColumn($params);
-    }
-    */
-
     public function hookActionFrontControllerSetMedia()
     {
         $this->context->controller->registerStylesheet(

@@ -30,16 +30,6 @@ use Module;
  */
 class Installer
 {
-    // /**
-    //  * @var FixturesInstaller
-    //  */
-    // private $fixturesInstaller;
-
-    // public function __construct(FixturesInstaller $fixturesInstaller)
-    // {
-    //     $this->fixturesInstaller = $fixturesInstaller;
-    // }
-
     /**
      * Module's installation entry point.
      *
@@ -50,25 +40,17 @@ class Installer
     public function install(Module $module): bool
     {
 
-        Logger::addLog("Start Installer install()");
         if (!$this->registerHooks($module)) {
-            Logger::addLog("Failed register hooks");
             return false;
         }
-        Logger::addLog("2 Installer install()");
 
         if (!$this->installDatabase()) {
-            Logger::addLog("Failed installDatabase");
             return false;
         }
-        Logger::addLog("3 Installer install()");
 
         if (!$this->installConfiguration()) {
-            Logger::addLog("Failed installConfiguration");
             return false;
         }
-        Logger::addLog("4 Installer install()");
-        // $this->fixturesInstaller->install();
 
         return true;
     }
@@ -83,7 +65,6 @@ class Installer
         if (!$this->uninstallDatabase()) {
             return false;
         }
-
 
         if (!$this->removeConfiguration()) {
             return false;
@@ -100,11 +81,15 @@ class Installer
     private function installDatabase(): bool
     {
         $queries = [
-            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "cotizaciones_extraimagen`(
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_solicitud_cotizacion`(
                 `id_cotizacion` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `email` VARCHAR(128), `phone` VARCHAR(15), `id_product` INT(10), 
                 `qty` INT(11), `days` INT(11), `colors` INT(11), `comment` varchar(512), `allow` INT(1),
                 `file` VARCHAR(256), `datetime` DATETIME NOT NULL default CURRENT_TIMESTAMP
+                ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`(
+                `id_cotizador_producto` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `id_product` INT(10), `enabled` INT(1)
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
         ];
 
@@ -119,7 +104,8 @@ class Installer
     private function uninstallDatabase(): bool
     {
         $queries = [
-            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "cotizaciones_extraimagen`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_solicitud_cotizacion`",
         ];
 
         return $this->executeQueries($queries);
@@ -134,20 +120,13 @@ class Installer
      */
     private function registerHooks(Module $module): bool
     {
-        Logger::addLog("registerHooks start");
-        // Logger::addLog($module);
-        
-
-        // Hooks available in the order view page.
         $hooks = [
             'displayAfterProductThumbs',
             'displayAdminProductsExtra',
             'actionProductUpdate',
         ];
-        Logger::addLog("registerHooks 2");
 
         return (bool) $module->registerHook($hooks);
-        // return true;
     }
 
         /**

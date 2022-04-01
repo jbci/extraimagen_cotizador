@@ -16,7 +16,7 @@
 <form action="" method="post" id="comment-form">
     <div class="form-group">
         <label for="email_allow">Habilitar cotizador para este producto:</label>
-        <input type="checkbox" name="allow_cotizador" id="allow_cotizador" class="form-control" value="1">
+        <input type="checkbox" name="allow_cotizador" id="allow_cotizador" class="form-control" value="1" {$allow_cotizador}>
     </div>
     <div class="form-group">
         <label for="email">Email:</label>
