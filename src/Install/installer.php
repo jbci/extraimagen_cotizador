@@ -89,7 +89,7 @@ class Installer
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`(
                 `id_cotizador_producto` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                `id_product` INT(10), `enabled` INT(1), `min_qty` INT(10)
+                `id_product` INT(10), `enabled` INT(1), `min_qty` INT(10), `base_price` DOUBLE
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_plazo_entrega`(
                 `id_plazo_entrega` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,

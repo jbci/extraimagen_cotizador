@@ -1,5 +1,24 @@
-<?php
 
+
+<?php
+/**
+ * Copyright since 2007 PrestaShop SA and Contributors
+ * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    PrestaShop SA and Contributors <contact@prestashop.com>
+ * @copyright Since 2007 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
+ */
 // use src\Install\Installer;
 
 require_once _PS_MODULE_DIR_ . 'cotizador/src/Install/installer.php';
@@ -129,6 +148,18 @@ class Cotizador extends Module
         return $helper->generateForm([$form]);
     }
 
+    private function checkLoggedInUser()
+    {
+        Logger::addLog("checkLoggedInUser => started");
+        if ($this->context->customer->isLogged()) {
+            Logger::addLog("checkLoggedInUser => true");
+            
+        } else {
+            Logger::addLog("checkLoggedInUser => false");
+        }
+        
+    }
+
     public function hookDisplayAfterProductThumbs($params)
     {
         Logger::addLog("hookDisplayAfterProductThumbs => started");
@@ -170,21 +201,34 @@ class Cotizador extends Module
             // Logger::addLog($total);
 
         }
-        Logger::addLog("hookDisplayAfterProductThumbs => 1");
+        // Logger::addLog("hookDisplayAfterProductThumbs => 1");
+
+        // $product = new Product($id_product);
+        $langID = $this->context->language->id;
+
+        $product = new Product($id_product, false, $langID);
         $this->context->smarty->assign([
             'cotizador_message' => Configuration::get('COTIZADOR_MESSAGE'),
             'cotizador_name' => Configuration::get('COTIZADOR_NAME'),
-            'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display')
+            'cotizador_link' => $this->context->link->getModuleLink('cotizador', 'display'),
+            'customer_logged' => $this->context->customer->isLogged(),
+            'customer_email' => $this->context->customer->email,
+            'requested_product' => $product,
+            'requested_product_name' => strval($product->name),
+            'requested_product_id' => $id_product,
+            'min_qty' => $this->getCotizadorProductoMinQty($id_product),
+            'prod_plazos' => $this->getCotizadorProductoPlazos($id_product),
+            'base_price' => $this->getCotizadorProductoBasePrice($id_product),
         ]);
-        Logger::addLog("hookDisplayAfterProductThumbs => 2");
-        Logger::addLog("hookDisplayAfterProductThumbs id_product=> {$id_product}");
+        // Logger::addLog("hookDisplayAfterProductThumbs => 2");
+        // Logger::addLog("hookDisplayAfterProductThumbs id_product=> {$id_product}");
         if ($this->getCotizadorProductoEnabled($id_product)) {
-            Logger::addLog("steps should be added!");
-            // return $this->display(__FILE__, 'steps_cotizador.tpl');
-            return $this->display(__FILE__, 'cotizador.tpl');
+            // Logger::addLog("steps should be added!");
+            return $this->display(__FILE__, 'steps_cotizador.tpl');
+            // return $this->display(__FILE__, 'cotizador.tpl');
         }
         // Logger::addLog("hookDisplayAfterProductThumbs => end");
-        return $this->display(__FILE__, 'steps_cotizador.tpl');
+        // return $this->display(__FILE__, 'steps_cotizador.tpl');
     }
 
     public function hookDisplayAdminProductsExtra($params)
@@ -199,6 +243,7 @@ class Cotizador extends Module
             $this->context->smarty->assign([
                 'allow_cotizador' => $checked,
                 'min_qty' => $this->getCotizadorProductoMinQty($id_product),
+                'base_price' => $this->getCotizadorProductoBasePrice($id_product),
                 'prod_plazos' => $this->getCotizadorProductoPlazos($id_product),
             ]);
 
@@ -208,15 +253,20 @@ class Cotizador extends Module
 
     private function getCotizadorProductoEnabled($id_product)
     {
+        // Logger::addLog("getCotizadorProductoEnabled => started");
+
         $request = "SELECT enabled FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
 
         $is_enabled = Db::getInstance()->getValue($request);
         if (!$is_enabled or $is_enabled == 0) {
+            // Logger::addLog("getCotizadorProductoEnabled => falseeee");
             return false;
         } else {
+            // Logger::addLog("getCotizadorProductoEnabled => trueeee");
             return true;
         }
     }
+
     private function getCotizadorProductoMinQty($id_product)
     {
         $request = "SELECT min_qty FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
@@ -226,6 +276,18 @@ class Cotizador extends Module
             return false;
         } else {
             return $min_qty;
+        }
+    }
+
+    private function getCotizadorProductoBasePrice($id_product)
+    {
+        $request = "SELECT base_price FROM `" . _DB_PREFIX_ . "extraimagen_cotizador_producto` WHERE id_product = {$id_product};";
+
+        $base_price = Db::getInstance()->getValue($request);
+        if (!$base_price) {
+            return false;
+        } else {
+            return $base_price;
         }
     }
 
@@ -258,8 +320,9 @@ class Cotizador extends Module
 
             $allow_cotizador = (int)Tools::getValue('allow_cotizador');
             $min_qty = (int)Tools::getValue('min_qty', 1);
+            $base_price = (int)Tools::getValue('base_price', 0);
 
-            $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty);
+            $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty, $base_price);
             $this-> updateProductoPlazo($params);
         }
     }
@@ -326,7 +389,7 @@ class Cotizador extends Module
         return $ids;
     }
 
-    private function updateCotizadorProducto($id_product, $enabled, $min_qty)
+    private function updateCotizadorProducto($id_product, $enabled, $min_qty, $base_price)
     {
         // Logger::addLog("allow_cotizador: {$enabled} ");
 
@@ -337,6 +400,7 @@ class Cotizador extends Module
             $result = Db::getInstance()->update('extraimagen_cotizador_producto', [
                 'enabled' => (int)$enabled,
                 'min_qty' => (int)$min_qty,
+                'base_price' => (int)$base_price,
             ], "id_product = {$id_product}", 1, true);
             if (!$result) {
                 $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
@@ -346,6 +410,7 @@ class Cotizador extends Module
                 'id_product' => (int)$id_product,
                 'enabled' => (int)$enabled,
                 'min_qty' => (int)$min_qty,
+                'base_price' => (int)$base_price,
             ]);
             if (!$result) {
                 $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
