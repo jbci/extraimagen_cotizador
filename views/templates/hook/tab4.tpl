@@ -1,5 +1,6 @@
 <!-- Block tab1 -->
   <div id="tab4" class="hidden_tab">
+      {include file="./producto_cotizacion.tpl"}
     <p>
       Que plazo (días habiles) requiere:
     </p>

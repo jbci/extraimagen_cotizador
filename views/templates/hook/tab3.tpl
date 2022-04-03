@@ -1,5 +1,6 @@
 <!-- Block tab1 -->
   <div id="tab3" class="hidden_tab">
+      {include file="./producto_cotizacion.tpl"}
     <p>
       Que tipo de trabajo requiere:
     </p>

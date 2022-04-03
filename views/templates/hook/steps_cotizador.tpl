@@ -172,6 +172,19 @@
   visibility: visible;
   margin-left: 50px;
 }
+
+.buttons_tab {
+  float: right;
+  margin-right: 50px;
+}
+
+.text_area {
+  width: 90%
+}
+
+.required_field {
+  color: red;
+}
 </style>
 
 
@@ -210,28 +223,35 @@
                 </ul>
             </div>
         </div>
-        <div class="row d-flex justify-content-right">
-          <div class="col-3">
-            {include file="./tab1.tpl"}
-            {include file="./tab2.tpl"}
-            {include file="./tab3.tpl"}
-            {include file="./tab4.tpl"}
-            {include file="./tab5.tpl"}
-            {include file="./tab6.tpl"}
-            {include file="./tab7.tpl"}
+        <form action="" method="post" id="comment-form">
+          <div class="row d-flex justify-content-right">
+            <div class="col-3">
+              {include file="./tab1.tpl"}
+              {include file="./tab2.tpl"}
+              {include file="./tab3.tpl"}
+              {include file="./tab4.tpl"}
+              {include file="./tab5.tpl"}
+              {include file="./tab6.tpl"}
+              {include file="./tab7.tpl"}
+            </div>
           </div>
-        </div>
-        <div class="row d-flex justify-content-center">
-          <div class="col-12">
-            <button type="button" id="btn-next" class="btn btn-primary" onclick="nextStep()">Siguiente</button>
+          <div class="row d-flex flex-row align-items-end">
+            <div class="row d-flex flex-row align-items-end buttons_tab">
+              <button type="button" id="btn-next" class="btn btn-outline-primary float-right" onclick="nextStep()">Siguiente</button>
+            </div>
           </div>
-        </div>
+          <div class="row d-flex flex-row align-items-end">
+            <div class="row d-flex flex-row align-items-end buttons_tab">
+              <button type="submit"  id="btn-submit" class="btn btn-outline-danger float-right" name="submit_cotizador" id="submit_cotizador">
+                <span>Enviar <i class="icon-chevron-right right"></i></span>
+              </button>
+            </div>
+          </div>
+        </form>
     </div>
   </div>
   </div>
 </div>
-
-{debug}
 
 <script>
 
@@ -298,10 +318,12 @@ function updateProgress() {
     tab.classList.remove("hidden_tab");
     tab.classList.add("visible_tab");
 
-      var btn = document.getElementById("btn-next");
+    var btn = document.getElementById("btn-next");
+    var submit = document.getElementById("btn-submit");
 
     if (currentStep == 6) {
-      btn.textContent = 'Enviar'
+      btn.hidden=true
+      submit.hidden=false
       calcPrice()
     }
     if (currentStep == 7) {
@@ -319,10 +341,36 @@ function updateEachState(s) {
   }
 }
 
+
+function validateCurrentStep() {
+  if (currentStep == 1) {
+    if (document.getElementById('phone').value == ""){
+      var ph_span = document.getElementById('ph_span')
+      ph_span.textContent = "Campo requerido"
+      return false
+    } 
+  }
+
+  if (currentStep == 2) {
+    if (document.getElementById('quantity').value == ""){
+      var ph_span = document.getElementById('qty_span')
+      ph_span.textContent = "Campo requerido"
+      return false
+    } 
+    if (parseInt(document.getElementById('quantity').value) < {$min_qty}){
+      var ph_span = document.getElementById('qty_span')
+      ph_span.textContent = "Mínimo {$min_qty}"
+      return false
+    } 
+  }
+  return true
+}
 function nextStep() {
-  currentStep = currentStep + 1;
-  stepStates.forEach(s =>  updateEachState(s))
-  updateProgress()
+  if (validateCurrentStep()) {
+    currentStep = currentStep + 1;
+    stepStates.forEach(s =>  updateEachState(s))
+    updateProgress()
+  }
 }
 
 function gotoStep(s) {
@@ -353,8 +401,16 @@ function calcPrice() {
   console.log("precio calculado")
   console.log(days_price_factor * qty * base_price)
 
-}
+  var priceSpan = document.getElementById("price_span")
+  priceSpan.textContent = (days_price_factor * qty * base_price).toString()
+  var timeSpan = document.getElementById("time_span")
+  timeSpan.textContent = prod_plazos_js[plazo_id.toString()].description
+  var qtySpan = document.getElementById("qty_span")
+  qtySpan.textContent = qty.toString()
 
+}
+var submit = document.getElementById("btn-submit");
+submit.hidden = true;
 </script>
 {* {$prod_plazos} *}
 </div>

@@ -150,19 +150,19 @@ class Cotizador extends Module
 
     private function checkLoggedInUser()
     {
-        Logger::addLog("checkLoggedInUser => started");
+        // Logger::addLog("checkLoggedInUser => started");
         if ($this->context->customer->isLogged()) {
-            Logger::addLog("checkLoggedInUser => true");
+            // Logger::addLog("checkLoggedInUser => true");
             
         } else {
-            Logger::addLog("checkLoggedInUser => false");
+            // Logger::addLog("checkLoggedInUser => false");
         }
         
     }
 
     public function hookDisplayAfterProductThumbs($params)
     {
-        Logger::addLog("hookDisplayAfterProductThumbs => started");
+        // Logger::addLog("hookDisplayAfterProductThumbs => started");
         $id_product = Tools::getValue('id_product');
         if (Tools::isSubmit('submit_cotizador')) {
             $email = Tools::getValue('email');
@@ -172,9 +172,7 @@ class Cotizador extends Module
             $colors = (int)Tools::getValue('colors');
             $comment = Tools::getValue('comment');
             $allow = (int)Tools::getValue('email_allow');
-
             $id_product = Tools::getValue('id_product');
-
             $insert = array(
                 'email' => $email,
                 'phone' => $phone,
@@ -199,6 +197,8 @@ class Cotizador extends Module
             // Logger::addLog($price);
             $total = $price * $qty;
             // Logger::addLog($total);
+
+            $this->sendCotizacionEmail($insert);
 
         }
         // Logger::addLog("hookDisplayAfterProductThumbs => 1");
@@ -439,4 +439,29 @@ class Cotizador extends Module
         );
     }
 
+    private function sendCotizacionEmail($insert)
+    {
+        Logger::addLog("sendCotizacionEmail => start");
+        $template_path = dirname(__FILE__).'/mails/';
+        Logger::addLog($template_path);
+
+        Mail::Send(
+            (int)(Configuration::get('PS_LANG_DEFAULT')), // defaut language id
+            'cotizacion', // email template file to be use
+            ' Solicitud de Cotización', // email subject
+            array(
+                '{email}' => Configuration::get('PS_SHOP_EMAIL'), // sender email address
+                '{message}' => 'Hello world' // email content
+            ),
+            Configuration::get('PS_SHOP_EMAIL'), // receiver email address
+            $insert['email'], //receiver name
+            "jordi.bari@gmail.com", //from email address
+            NULL,  //from name
+            NULL, //file attachment
+            NULL, //mode smtp
+            $template_path //custom template path
+        );
+
+        Logger::addLog("sendCotizacionEmail => end");
+    }
 }
