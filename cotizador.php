@@ -52,6 +52,18 @@ class Cotizador extends Module
         if (!Configuration::get('COTIZADOR_NAME')) {
             $this->warning = $this->l('No name provided');
         }
+
+        $this->tabs = [
+            [
+                'route_name' => 'admin_link_block_list',
+                'class_name' => 'Cotizaciones',
+                'visible' => true,
+                'name' => 'Cotizaciones',
+                'parent_class_name' => 'AdminCatalog',
+                'wording' => 'Link List',
+                'wording_domain' => 'Modules.Linklist.Admin'
+            ],
+        ];
     }
 
     public function install()
