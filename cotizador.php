@@ -55,13 +55,13 @@ class Cotizador extends Module
 
         $this->tabs = [
             [
-                'route_name' => 'admin_link_block_list',
-                'class_name' => 'Cotizaciones',
+                'route_name' => '',
+                'class_name' => 'CotizacionAdmin',
                 'visible' => true,
                 'name' => 'Cotizaciones',
-                'parent_class_name' => 'AdminCatalog',
-                'wording' => 'Link List',
-                'wording_domain' => 'Modules.Linklist.Admin'
+                'parent_class_name' => 'SELL',
+                'wording' => '',
+                'wording_domain' => ''
             ],
         ];
     }

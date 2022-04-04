@@ -37,7 +37,7 @@ class Installer
      *
      * @return bool
      */
-    public function install(Module $module): bool
+    public function install(Module $module)
     {
 
         if (!$this->registerHooks($module)) {
@@ -52,6 +52,10 @@ class Installer
             return false;
         }
 
+        // if (!$this->installTab()) {
+        //     return false;
+        // }
+
         return true;
     }
 
@@ -60,7 +64,7 @@ class Installer
      *
      * @return bool
      */
-    public function uninstall(): bool
+    public function uninstall()
     {
         if (!$this->uninstallDatabase()) {
             return false;
@@ -70,6 +74,10 @@ class Installer
             return false;
         }
 
+        // if (!$this->uninstallTab()) {
+        //     return false;
+        // }
+
         return true;
     }
 
@@ -78,14 +86,14 @@ class Installer
      *
      * @return bool
      */
-    private function installDatabase(): bool
+    private function installDatabase()
     {
         $queries = [
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_solicitud_cotizacion`(
                 `id_cotizacion` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `email` VARCHAR(128), `phone` VARCHAR(15), `id_product` INT(10), 
-                `qty` INT(11), `days` INT(11), `colors` INT(11), `comment` varchar(512), `allow` INT(1),
-                `file` VARCHAR(256), `datetime` DATETIME NOT NULL default CURRENT_TIMESTAMP
+                `qty` INT(11), `days` INT(11), `colors` INT(11), `comment` varchar(512), `allow` INT(1), 
+                `replied` INT(1), `file` VARCHAR(256), `datetime` DATETIME NOT NULL default CURRENT_TIMESTAMP
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`(
                 `id_cotizador_producto` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -103,12 +111,48 @@ class Installer
                 `id_tipo_trabajo` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `description` VARCHAR(256)
             ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "INSERT INTO `ps_extraimagen_producto_plazo` (`id`, `id_plazo_entrega`, `id_product`, `price_factor`, `enabled`, `max_qty`) VALUES
+            (1,	1,	17,	3,	1,	100),
+            (2,	2,	17,	0,	0,	0),
+            (3,	3,	17,	0,	0,	0),
+            (4,	4,	17,	0,	0,	0),
+            (5,	5,	17,	0,	0,	0),
+            (6,	1,	19,	4,	1,	4),
+            (7,	2,	19,	4,	1,	4),
+            (8,	3,	19,	0,	0,	0),
+            (9,	4,	19,	0,	0,	0),
+            (10,	5,	19,	0,	0,	0),
+            (11,	1,	18,	0,	0,	0),
+            (12,	2,	18,	0,	0,	0),
+            (13,	3,	18,	0,	0,	0),
+            (14,	4,	18,	6,	1,	6),
+            (15,	5,	18,	0,	0,	0),
+            (16,	1,	1,	6,	1,	6),
+            (17,	2,	1,	0,	0,	0),
+            (18,	3,	1,	0,	0,	0),
+            (19,	4,	1,	0,	0,	0),
+            (20,	5,	1,	0,	0,	0),
+            (21,	1,	2,	3,	1,	100),
+            (22,	2,	2,	0,	0,	0),
+            (23,	3,	2,	0,	0,	0),
+            (24,	4,	2,	0,	0,	0),
+            (25,	5,	2,	0,	0,	0);",
+            "INSERT INTO `ps_extraimagen_cotizador_producto` (`id_cotizador_producto`, `id_product`, `enabled`, `min_qty`, `base_price`) VALUES
+            (1,	17,	1,	100, 99.0),
+            (2,	19,	1,	4, 99.0),
+            (3,	18,	1,	6, 99.0),
+            (4,	1,	1,	6, 99.0),
+            (5,	2,	1,	100, 99.0);",
+            "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `qty`, `days`, `colors`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
+            (1,	'user@extraimagen.cl',	'+56974471398',	17,	0,	0,	0,	'dfgdfgdsgsdfgdsfgsdfg',	0,  0,	'file',	'2022-04-04 16:14:10');",
+            "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `qty`, `days`, `colors`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
+            (2,	'jordi.bari@gmail.com',	'974471398',	19,	100,	5,	2,	'comentatios de cotizacion',	1,	1,	NULL,	'2022-04-04 19:21:40');"
         ];
 
         return ($this->executeQueries($queries) && $this->populateDatabase());
     }
 
-    private function populateDatabase(): bool
+    private function populateDatabase()
     {
         $result_1 = Db::getInstance()->insert(
             'extraimagen_plazo_entrega',
@@ -162,7 +206,7 @@ class Installer
      *
      * @return bool
      */
-    private function uninstallDatabase(): bool
+    private function uninstallDatabase()
     {
         $queries = [
             "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`",
@@ -182,7 +226,7 @@ class Installer
      *
      * @return bool
      */
-    private function registerHooks(Module $module): bool
+    private function registerHooks(Module $module)
     {
         $hooks = [
             'displayAfterProductThumbs',
@@ -200,19 +244,51 @@ class Installer
      *
      * @return bool
      */
-    private function installConfiguration(): bool
+    private function installConfiguration()
     {
 
         return (Configuration::updateValue('COTIZADOR_NAME', 'ExtraImagen')
                 && Configuration::updateValue('COTIZADOR_MESSAGE', 'Este mensaje se mostrará en el cotizador y debe configurarse en el administrador'));
     }
 
-    private function removeConfiguration(): bool
+    private function removeConfiguration()
     {
 
         return (Configuration::deleteByName('COTIZADOR_NAME')
                 && Configuration::deleteByName('COTIZADOR_MESSAGE'));
 
+    }
+
+    private function installTab()
+    {
+        $tabId = (int) Tab::getIdFromClassName('CotizacionAdminController');
+        if (!$tabId) {
+            $tabId = null;
+        }
+
+        $tab = new Tab($tabId);
+        $tab->active = 1;
+        $tab->class_name = 'CotizacionAdminController';
+        // Only since 1.7.7, you can define a route name
+        // $tab->route_name = 'admin_my_symfony_routing';
+        $tab->name = "Cotizaciones";
+        $atb->parent_class_name = 'AdminParentOrders';
+        // $tab->id_parent = (int) Tab::getIdFromClassName('AdminParentOrders');
+        // $tab->module = $this->name;
+
+        return $tab->save();
+    }
+
+    private function uninstallTab()
+    {
+        $tabId = (int) Tab::getIdFromClassName('Cotizador');
+        if (!$tabId) {
+            return true;
+        }
+
+        $tab = new Tab($tabId);
+
+        return $tab->delete();
     }
 
     /**
@@ -222,7 +298,7 @@ class Installer
      *
      * @return bool
      */
-    private function executeQueries(array $queries): bool
+    private function executeQueries(array $queries)
     {
         foreach ($queries as $query) {
             if (!Db::getInstance()->execute($query)) {
