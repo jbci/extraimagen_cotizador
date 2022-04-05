@@ -185,20 +185,53 @@
 .required_field {
   color: red;
 }
+
+/* The Modal (background) */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: black;
+}
+
+/* Modal Content */
+.modal-content {
+  position: relative;
+  background-color: #fefefe;
+  margin: auto;
+  padding: 0;
+  width: 90%;
+  max-width: 1200px;
+}
+
+/* The Close Button */
+.close {
+  color: white;
+  position: absolute;
+  top: 50px;
+  right: 50px;
+  font-size: 70px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #999;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 </style>
 
-
-
-<div class="popup" >
-  {if $customer_logged == true}
-    <h2 onclick="openPopup()">Cotice aquí</h2>
-  {else}
-    <h2>Debe estar registrado para cotizar</h2>
-  {/if}
-  
-  {* <div class="popuptext" >
-    Click me to toggle the popup!
-  </div> *}
+<div id="myModal" class="modal">
+  <span class="close cursor" onclick="closePopup()">&times;</span>
+  <div class="modal-content">
   <div class="popuptext" >
   <div class="container px-1 px-md-4 py-5 mx-auto" id="cotizadorPopup">
     <div class="card">
@@ -251,6 +284,15 @@
     </div>
   </div>
   </div>
+  </div>
+</div>
+
+<div class="popup" >
+  {if $customer_logged == true}
+    <h2 onclick="openPopup()">Cotice aquí</h2>
+  {else}
+    <h2>Debe estar registrado para cotizar</h2>
+  {/if}
 </div>
 
 <script>
@@ -282,7 +324,7 @@ function openPopup() {
     popup.classList.toggle("show");
     popupIsOpen = false;
   }
-
+  document.getElementById("myModal").style.display = "block";
   updateProgress()
 }
 
@@ -292,6 +334,7 @@ function closePopup() {
     popup.classList.toggle("show");
     popupIsOpen = false;
   }
+  document.getElementById("myModal").style.display = "none";
 }
 
 function eachState(s) {
