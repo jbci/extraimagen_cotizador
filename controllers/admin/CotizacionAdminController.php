@@ -1,4 +1,5 @@
 <?php
+use Context;
 // require_once _PS_ROOT_DIR_.'/override/classes/my_dir/Pasta.php';
 
 class CotizacionAdminController extends ModuleAdminController {
@@ -30,7 +31,7 @@ class CotizacionAdminController extends ModuleAdminController {
                         'search' => true,
                     ],
             'id_cotizacion' => [
-                            'title' => $this->l('Completar'),
+                            'title' => $this->l('Completado'),
                             'class' => 'fixed-width-xs',
                             'align' =>'text-right',
                             'search' => false,
@@ -52,7 +53,7 @@ class CotizacionAdminController extends ModuleAdminController {
             'datetime' => ['title' => 'Fecha','type'=>'datetime'],
         ];
         // Read & update record
-        $this->addRowAction('details');
+        // $this->addRowAction('details');
         // $this->addRowAction('edit');
         $this->addRowAction('markCompleted');
         // $categories = Category::getCategories($this->context->language->id, $active=true, $order=false); // [0=>[id_category=>X,name=>Y]..]
@@ -74,57 +75,31 @@ class CotizacionAdminController extends ModuleAdminController {
             ['name'=>'comments','type'=>'text','label'=>'Comentarios'],
             ['name'=>'created','type'=>'datetime','label'=>'Fecha de solicitud'],
 
-            // ['name'=>'id_pasta_category','label'=>'Category','type'=>'select','required'=>true,'class'=>'select2',
-            // 'options'=>[ 'query'=>$categories,
-            //     'id'=>'id_category', // use the key "id_category" as the <option> value
-            //     'name'=> 'name', // use the key "name" as the <option> title
-            // ]],
-        ],
-        // 'submit' => [
-        //     'title' => $this->trans('Save', [], 'Admin.Actions'),
-        // ]
+            ],
         ];
-    }
-
-    public static function my_visibility_function($my_visibility_function)
-    {
-        // Logger::addLog("my_visibility_function => started");
-        // Logger::addLog($my_visibility_function);
-
-        if ($my_visibility_function == 1) {
-            return '<span style="background-color : #00FF00; color : #ffffff; border-radius : 4px/4px"> SI </span>';
-        } else {
-            return '<span style="background-color : #FF0000; color : #ffffff; border-radius : 4px/4px"> NO </span>';
-        }
-            
     }
 
     public function viewMyButton($value, $form)
     {
-        Logger::addLog("viewMyButton => started");
-        Logger::addLog($value);
+        // Logger::addLog("viewMyButton => started");
+        // Logger::addLog($value);
         // Logger::addLog($form);
         // var_dump($form);die;
         if ($form["replied"]== 1){
-            return '<span style="background-color : #00FF00; color : #000000; border-radius : 4px/4px"> COMPLETADO </span>';
+            return '<span style="background-color : #00FF00; color : #000000; border-radius : 2px/2px"> COMPLETADO </span>';
         } else {
-            return '<span class="btn-group-action">
-                    <span class="btn-group">
-                        <a class="btn btn-default" href="'.$value.'"><i class="icon-check"></i>&nbsp;
-                        </a>
-                    </span>
-                </span>';
+            return '<span style="background-color : #FF0000; color : #000000; border-radius : 2px/2px"> PENDIENTE </span>';
         }
         
     }
 
     public function initProcess()
     {
-        Logger::addLog("initProcess => started");
+        // Logger::addLog("initProcess => started");
         // var_dump($this);die;
         if (Tools::getIsset('markCompleted'.$this->table))
         {
-            Logger::addLog("initProcess => inside if");
+            // Logger::addLog("initProcess => inside if");
             $this->action = 'markCompleted';
         }
         parent::initProcess();
@@ -132,8 +107,53 @@ class CotizacionAdminController extends ModuleAdminController {
 
     public function displayMarkCompletedLink($token = null, $id, $name = null)
     {
-        Logger::addLog("displayMarkCompletedLink => started");
-        // Do your button processing here
+        // Logger::addLog("displayMarkCompletedLink => started");
+        // Logger::addLog("displayMarkCompletedLink => token: {$token}");
+        // Logger::addLog("displayMarkCompletedLink => id: {$id}");
+        // Logger::addLog("displayMarkCompletedLink => name: {$name}");
+
+        $link = Context::getContext()->link;
+
+        $symfonyUrl = $link->getAdminLink('CotizacionAdmin', true, [
+            // 'route' => 'admin_product_unit_action',            
+            'id_cotizacion' => $id,
+            'id' => $id,],
+            ['action' => 'markCompleted',
+            'id_cotizacion' => $id,]
+        );
+
+        // Logger::addLog("displayMarkCompletedLink => symfonyUrl: {$symfonyUrl}");
+        return '<div> <span class="btn-group-action">
+                    <span class="btn-group">
+                        <a class="btn btn-default" href="'.$symfonyUrl.'"><i class="icon-check"> </i>Marcar Completado&nbsp;
+                        </a>
+                    </span>
+                </span> </div>';
     }  
     
+    public function processMarkCompleted()
+    {
+        // Logger::addLog("processMarkCompleted => started");
+        // var_dump(Context::getContext());die;
+        // var_dump(Context::getContext()->queryString);die;
+        $id_cotizacion = Tools::getValue('id_cotizacion');
+        $id_employee = Context::getContext()->employee->id;
+        if ($id_cotizacion) {
+            // Logger::addLog("processMarkCompleted => id_cotizacion: {$id_cotizacion}");
+            // Logger::addLog("processMarkCompleted => id_employee: {$id_employee}");
+            $this->updateSolicitud($id_cotizacion);
+        }
+    }
+
+    private function updateSolicitud($id_solicitud)
+    {
+        // Logger::addLog("updateSolicitud:  ");
+
+        $result = Db::getInstance()->update('extraimagen_solicitud_cotizacion', [
+            'replied' => 1,
+        ], "id_cotizacion = {$id_solicitud}", 1, true);
+        if (!$result) {
+            $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+        }
+    }
 }
