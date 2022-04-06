@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 // namespace cotizador\Install;
 
-use Db;
+// use Db;
 use Module;
 
 /**
