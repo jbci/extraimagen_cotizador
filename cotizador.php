@@ -199,15 +199,15 @@ class Cotizador extends Module
             $allow = (int)Tools::getValue('email_allow');
             $id_product = Tools::getValue('id_product');
             $insert = array(
-                'email' => $email,
-                'phone' => $phone,
+                'email' => pSQL($email),
+                'phone' => pSQL($phone),
                 'id_product' => (int)$id_product,
                 'quantity' => (int)$quantity,
                 'id_plazo_entrega' => (int)$extrai_work_days,
                 'id_tipo_trabajo' => (int)$extrai_work_type,
                 'allow' => (int)$allow,
                 'file' => "file",
-                'comment' => $comment,
+                'comment' => pSQL($comment),
             );
 
             $result = Db::getInstance()->insert('extraimagen_solicitud_cotizacion', $insert);
@@ -568,8 +568,15 @@ class Cotizador extends Module
             'cotizacion', // email template file to be use
             ' Solicitud de Cotización', // email subject
             array(
-                '{email}' => Configuration::get('PS_SHOP_EMAIL'), // sender email address
-                '{message}' => 'Hello world' // email content
+                '{email}' => $insert['email'], // sender email address
+                '{phone_number}' => $insert['phone'],
+                '{product_name}' => $insert['id_product'],
+                '{product_quantity}' => $insert['quantity'],
+                '{plazo}' => $insert['id_plazo_entrega'],
+                '{tipo_trabajo}' => $insert['id_tipo_trabajo'],
+                '{comment}' => $insert['comment'],
+                '{shop_name}' => "Extraimagen SPA.",
+                '{shop_url}' => Configuration::get('PS_BASE_URI'),
             ),
             Configuration::get('PS_SHOP_EMAIL'), // receiver email address
             $insert['email'], //receiver name
