@@ -2,11 +2,20 @@
 
 {shop_url}
 
-Hola {firstname} {lastname},
+Hola {email},
 
-Esta es una prueba de email de su tienda.
+Usted solicitó una cotización a Extraimagen Spa.
 
-Si puede leer esto, significa que ¡la prueba fue completada correctamente!
+Los detalles de la cotización són los siguientes:
+- producto: {product_name}
+- cantidad: {product_quantity}
+- plazo: {plazo}
+- trabajo: {tipo_trabajo}
+- comentario: {comment}
+
+El personal de extraimagen se pondrá en contacto con usted a la brevedad al teléfono {phone_number}.
+
+Gracias.
 
 [{shop_name}]({shop_url})
 

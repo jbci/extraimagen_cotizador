@@ -145,7 +145,8 @@
 
 #progressbar li.active:before,
 #progressbar li.active:after {
-    background: #651FFF
+    background: {$steps_color}
+    {* background: #651FFF *}
 }
 
 #progressbar li.active:before {
@@ -190,7 +191,7 @@
 .modal {
   display: none;
   position: fixed;
-  z-index: 1;
+  z-index: 9999;
   padding-top: 100px;
   left: 0;
   top: 0;
@@ -237,11 +238,12 @@
     <div class="card">
         <div class="row d-flex justify-content-between px-3 top">
             <div class="d-flex">
+            {include file="./producto_cotizacion.tpl"}
             </div>
-            <div class="d-flex flex-column text-sm-right" onclick="closePopup()">
+            {* <div class="d-flex flex-column text-sm-right" onclick="closePopup()">
                 <p class="mb-0">Cerrar Cotizador</p>
-                <i class="bi bi-x-square-fill"></i>
-            </div>
+                <span class="close cursor" onclick="closePopup()">&times;</span>
+            </div> *}
         </div> <!-- Add class 'active' to progress -->
         <div class="row d-flex justify-content-center">
             <div class="col-12">

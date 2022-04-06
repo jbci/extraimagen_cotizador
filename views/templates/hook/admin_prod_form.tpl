@@ -65,6 +65,47 @@
                 </table>
             </div>
         </div>
+        <div class="form-group">
+            <label for="prod_plazos">
+                <h2>{l s='Tipos de trabajo asociados:' mod='cotizador'}</h2>
+            </label>
+            <div class="row">
+                <table>
+                    <thead>
+                        <tr>
+                            <td>
+                                Habilitado
+                            </td>
+                            <td>
+                                
+                            </td>
+                            <td>
+                                Factor Incremento
+                            </td>
+                        </tr>
+                    </th>
+                    {foreach from=$tipo_trabajos item=tipo}
+                        <tr>
+                            {$id_tipo_trabajo = "_{$tipo["id_tipo_trabajo"]}"}
+                            <td>
+                            {if $tipo["enabled"] == 1}
+                                {$checked='checked'}
+                            {else}
+                                {$checked=''}
+                            {/if}
+                                <input type="checkbox" name="allow_tipo{$id_tipo_trabajo}" id="allow_tipo{$id_tipo_trabajo}" {$checked}>
+                            </td>
+                            <td>
+                                <label for="tipo_trabajos">{$tipo["description"]}</label>
+                            </td>
+                            <td>
+                                <input name="price_factor_tipo{$id_tipo_trabajo}" id="price_factor_tipo{$id_tipo_trabajo}" class="form-control" value="{$tipo["price_factor"]}" required>
+                            </td>
+                        </tr>
+                    {/foreach}
+                </table>
+            </div>
+        </div>
     <div class="form-group">
         <label for="accept_changes">
             <h2>{l s='Aceptar cambios:' mod='cotizador'}</h2>

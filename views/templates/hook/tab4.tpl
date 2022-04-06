@@ -1,10 +1,9 @@
 <!-- Block tab1 -->
   <div id="tab4" class="hidden_tab">
-      {include file="./producto_cotizacion.tpl"}
     <p>
       Que plazo (días habiles) requiere:
     </p>
-    <select id="work_days" name="extrai_work_type">
+    <select id="extrai_work_days" name="extrai_work_days">
       {foreach from=$prod_plazos item=plazo}
         {if $plazo['enabled'] == true}
           {$disabled = ""}

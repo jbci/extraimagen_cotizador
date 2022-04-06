@@ -98,14 +98,16 @@ class Cotizador extends Module
         if (Tools::isSubmit('submit' . $this->name)) {
             // retrieve the value set by the user
             $configValue = (string) Tools::getValue('COTIZADOR_MESSAGE');
+            $configColorValue = (string) Tools::getValue('COTIZADOR_STEPS_COLOR');
 
             // check that the value is valid
-            if (empty($configValue) || !Validate::isGenericName($configValue)) {
+            if (empty($configValue) || !Validate::isGenericName($configValue) || empty($configColorValue) || !Validate::isGenericName($configColorValue)) {
                 // invalid value, show an error
                 $output = $this->displayError($this->l('Invalid Configuration value'));
             } else {
                 // value is ok, update it and display a confirmation message
                 Configuration::updateValue('COTIZADOR_MESSAGE', $configValue);
+                Configuration::updateValue('COTIZADOR_STEPS_COLOR', $configColorValue);
                 $output = $this->displayConfirmation($this->l('Settings updated'));
             }
         }
@@ -134,6 +136,13 @@ class Cotizador extends Module
                         'size' => 200,
                         'required' => true,
                     ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Color'),
+                        'name' => 'COTIZADOR_STEPS_COLOR',
+                        'size' => 10,
+                        'required' => true,
+                    ],
                 ],
                 'submit' => [
                     'title' => $this->l('Save'),
@@ -156,6 +165,7 @@ class Cotizador extends Module
 
         // Load current value into the form
         $helper->fields_value['COTIZADOR_MESSAGE'] = Tools::getValue('COTIZADOR_MESSAGE', Configuration::get('COTIZADOR_MESSAGE'));
+        $helper->fields_value['COTIZADOR_STEPS_COLOR'] = Tools::getValue('COTIZADOR_STEPS_COLOR', Configuration::get('COTIZADOR_STEPS_COLOR'));
 
         return $helper->generateForm([$form]);
     }
@@ -175,13 +185,16 @@ class Cotizador extends Module
     public function hookDisplayAfterProductThumbs($params)
     {
         // Logger::addLog("hookDisplayAfterProductThumbs => started");
+        // var_dump($params);die;
         $id_product = Tools::getValue('id_product');
         if (Tools::isSubmit('submit_cotizador')) {
             $email = Tools::getValue('email');
             $phone = Tools::getValue('phone');
-            $days = (int)Tools::getValue('days');
-            $qty = (int)Tools::getValue('qty');
-            $colors = (int)Tools::getValue('colors');
+            $extrai_work_days = (int)Tools::getValue('extrai_work_days');
+            // Logger::addLog("hookDisplayAfterProductThumbs => extrai_work_days: {$extrai_work_days}");
+            $quantity = (int)Tools::getValue('quantity');
+            $extrai_work_type = (int)Tools::getValue('extrai_work_type');
+            // Logger::addLog("hookDisplayAfterProductThumbs => extrai_work_type: {$extrai_work_type}");
             $comment = Tools::getValue('comment');
             $allow = (int)Tools::getValue('email_allow');
             $id_product = Tools::getValue('id_product');
@@ -189,9 +202,9 @@ class Cotizador extends Module
                 'email' => $email,
                 'phone' => $phone,
                 'id_product' => (int)$id_product,
-                'qty' => (int)$qty,
-                'days' => (int)$days,
-                'colors' => (int)$colors,
+                'quantity' => (int)$quantity,
+                'id_plazo_entrega' => (int)$extrai_work_days,
+                'id_tipo_trabajo' => (int)$extrai_work_type,
                 'allow' => (int)$allow,
                 'file' => "file",
                 'comment' => $comment,
@@ -200,14 +213,14 @@ class Cotizador extends Module
             $result = Db::getInstance()->insert('extraimagen_solicitud_cotizacion', $insert);
 
             $product = new Product($id_product);
-            Logger::addLog("id_product => {$id_product}");
+            // Logger::addLog("id_product => {$id_product}");
             $float_price = floatval($product->price);
             $price = $product->price;
             // $price = $product->getPrice();
-            Logger::addLog($price);
             // Logger::addLog($price);
             // Logger::addLog($price);
-            $total = $price * $qty;
+            // Logger::addLog($price);
+            // $total = $price * $quantity;
             // Logger::addLog($total);
 
             $this->sendCotizacionEmail($insert);
@@ -230,7 +243,9 @@ class Cotizador extends Module
             'requested_product_id' => $id_product,
             'min_qty' => $this->getCotizadorProductoMinQty($id_product),
             'prod_plazos' => $this->getCotizadorProductoPlazos($id_product),
+            'tipo_trabajos' => $this->getCotizadorProductoTrabajos($id_product),
             'base_price' => $this->getCotizadorProductoBasePrice($id_product),
+            'steps_color' => Configuration::get('COTIZADOR_STEPS_COLOR'),
         ]);
         // Logger::addLog("hookDisplayAfterProductThumbs => 2");
         // Logger::addLog("hookDisplayAfterProductThumbs id_product=> {$id_product}");
@@ -257,6 +272,7 @@ class Cotizador extends Module
                 'min_qty' => $this->getCotizadorProductoMinQty($id_product),
                 'base_price' => $this->getCotizadorProductoBasePrice($id_product),
                 'prod_plazos' => $this->getCotizadorProductoPlazos($id_product),
+                'tipo_trabajos' => $this->getCotizadorProductoTrabajos($id_product),
             ]);
 
             return $this->display(__FILE__, 'admin_prod_form.tpl');
@@ -323,6 +339,26 @@ class Cotizador extends Module
         }
     }
 
+    private function getCotizadorProductoTrabajos($id_product)
+    {
+        $request = "SELECT * FROM (
+                    SELECT b.*, a.id_product, a.price_factor, a.enabled FROM ps_extraimagen_producto_trabajo a
+                                LEFT JOIN ps_extraimagen_tipo_trabajo b ON a.id_tipo_trabajo = b.id_tipo_trabajo
+                    AND id_product = {$id_product}
+                                UNION
+                                SELECT b.*, a.id_product, a.price_factor, a.enabled FROM ps_extraimagen_producto_trabajo a
+                                RIGHT JOIN ps_extraimagen_tipo_trabajo b ON a.id_tipo_trabajo = b.id_tipo_trabajo
+                    AND id_product = {$id_product}) as s
+                    WHERE id_tipo_trabajo IS NOT NULL;";
+
+        $result = Db::getInstance()->executeS($request);
+        if (!$result) {
+            $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+        } else {
+            return $result;
+        }
+    }
+
     public function hookActionProductUpdate($params)
     {
         $accept_value =(int)Tools::getValue('accept');
@@ -336,6 +372,7 @@ class Cotizador extends Module
 
             $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty, $base_price);
             $this-> updateProductoPlazo($params);
+            $this-> updateProductoTipoTrabajo($params);
         }
     }
 
@@ -345,7 +382,7 @@ class Cotizador extends Module
 
         $params_id_product = (int)$params['id_product'];
 
-        $this->getPlazoIds();
+        // $this->getPlazoIds();
         foreach ($this->getPlazoIds() as $id_plazo_entrega) {
             
             $price_factor = Tools::getValue("price_factor_{$id_plazo_entrega}");
@@ -384,6 +421,54 @@ class Cotizador extends Module
         }
 
     }
+    private function updateProductoTipoTrabajo($params)
+    {
+        // Logger::addLog("updateProductoTipoTrabajo start: ");
+
+        $params_id_product = (int)$params['id_product'];
+
+        foreach ($this->getTipoTrabajoIds() as $id_tipo_trabajo) {
+            // Logger::addLog("updateProductoTipoTrabajo id_tipo_trabajo: {$id_tipo_trabajo}");
+            
+            $price_factor = Tools::getValue("price_factor_tipo_{$id_tipo_trabajo}");
+            // Logger::addLog("updateProductoTipoTrabajo price_factor_tipo_{$id_tipo_trabajo}: {$price_factor}");
+            $allow_tipo = Tools::getValue("allow_tipo_{$id_tipo_trabajo}");
+            // Logger::addLog("updateProductoTipoTrabajo allow_tipo_{$id_tipo_trabajo}: {$allow_tipo}");
+            $enabled = 0;
+            if (isset($allow_tipo) && $allow_tipo == 'on'){
+                $enabled = 1;
+            }
+            
+            $query = "SELECT count(id_tipo_trabajo) FROM `" . _DB_PREFIX_ . "extraimagen_producto_trabajo` WHERE id_product = {$params_id_product} and id_tipo_trabajo = {$id_tipo_trabajo};";
+            // Logger::addLog("updateProductoTipoTrabajo query: {$query}");
+            $queryCount = (int)Db::getInstance()->getValue($query);
+
+            if ($queryCount > 0) {
+                // Logger::addLog("updateProductoTipoTrabajo => update");
+                $result = Db::getInstance()->update('extraimagen_producto_trabajo', [
+                    'price_factor' => floatval($price_factor),
+                    'enabled' => (int)$enabled,
+                ], "id_product = {$params_id_product} AND id_tipo_trabajo = {$id_tipo_trabajo}", 1, true);
+                if (!$result) {
+                    $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+                }
+            } else {
+                // Logger::addLog("updateProductoTipoTrabajo => insert");
+                $result = Db::getInstance()->insert('extraimagen_producto_trabajo', [
+                    'id_product' => (int)$params_id_product,
+                    'id_tipo_trabajo' => (int)$id_tipo_trabajo,
+                    'price_factor' => floatval($price_factor),
+                    'enabled' => (int)$enabled,
+                ]);
+                if (!$result) {
+                    $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+                }
+                
+            }
+            // Logger::addLog("updateProductoTipoTrabajo => foreach end");
+        }
+
+    }
 
     private function getPlazoIds()
     {
@@ -395,6 +480,27 @@ class Cotizador extends Module
         } else {
             $ids = array_map(function ($row) {
                 return $row['id_plazo_entrega'];
+            }, $results);
+        }
+
+        return $ids;
+    }
+
+    private function getTipoTrabajoIds()
+    {
+        // Logger::addLog("getTipoTrabajoIds => started ");
+        $query = "SELECT id_tipo_trabajo FROM " . _DB_PREFIX_ . "extraimagen_tipo_trabajo LIMIT 100;";
+        // Logger::addLog("getTipoTrabajoIds => query: {$query} ");
+        $results = Db::getInstance()->executeS($query);
+        $ids = [];
+        if (!$results) {
+            // Logger::addLog("getTipoTrabajoIds => if : not results ");
+            $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+        } else {
+            // Logger::addLog("getTipoTrabajoIds => if : results ");
+            $ids = array_map(function ($row) {
+                // Logger::addLog("getTipoTrabajoIds => id_tipo_trabajo : {$row['id_tipo_trabajo']} ");
+                return $row['id_tipo_trabajo'];
             }, $results);
         }
 
@@ -455,7 +561,7 @@ class Cotizador extends Module
     {
         Logger::addLog("sendCotizacionEmail => start");
         $template_path = dirname(__FILE__).'/mails/';
-        Logger::addLog($template_path);
+        // Logger::addLog($template_path);
 
         Mail::Send(
             (int)(Configuration::get('PS_LANG_DEFAULT')), // defaut language id
@@ -467,13 +573,13 @@ class Cotizador extends Module
             ),
             Configuration::get('PS_SHOP_EMAIL'), // receiver email address
             $insert['email'], //receiver name
-            "jordi.bari@gmail.com", //from email address
+            Configuration::get('PS_SHOP_EMAIL'), //from email address
             NULL,  //from name
             NULL, //file attachment
             NULL, //mode smtp
             $template_path //custom template path
         );
 
-        Logger::addLog("sendCotizacionEmail => end");
+        // Logger::addLog("sendCotizacionEmail => end");
     }
 }

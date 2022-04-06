@@ -1,6 +1,5 @@
 <!-- Block tab1 -->
   <div id="tab6" class="hidden_tab">
-      {include file="./producto_cotizacion.tpl"}
     <p>
       El precio para las siguientes características:
       <ul>

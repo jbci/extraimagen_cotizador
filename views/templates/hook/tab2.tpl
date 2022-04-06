@@ -1,6 +1,5 @@
 <!-- Block tab1 -->
   <div id="tab2" class="hidden_tab">
-      {include file="./producto_cotizacion.tpl"}
     <p>
       Que cantidad desea cotizar?(* Requerido)
     </p>

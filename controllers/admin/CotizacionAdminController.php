@@ -15,10 +15,14 @@ class CotizacionAdminController extends ModuleAdminController {
         $this->_defaultOrderBy = 'a.id_cotizacion'; // the table alias is always `a`
         $this->_defaultOrderWay = 'DESC';
         $this->_select = 'a.id_cotizacion as `id`, a.id_cotizacion as `id_cotizacion`, a.replied as `replied`, a.email as `email`, a.phone as `phone`, pl.name as `prod_name`
-        , a.id_product as `id_product`, a.qty as `qty` , a.days as `days` , a.datetime as `datetime`';
+        , a.id_product as `id_product`, a.quantity as `quantity` , a.id_plazo_entrega as `id_plazo_entrega` , a.datetime as `datetime`
+        , plazo.description as `desc_plazo`, tipo_trabajo.description as `desc_tipo_trabajo`, a.comment as `comment`
+        ';
         $this->_join = '
             LEFT JOIN `'._DB_PREFIX_.'product` prod ON (prod.id_product=a.id_product)
             LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (prod.id_product=pl.id_product and prod.id_shop_default=pl.id_shop)
+            LEFT JOIN `'._DB_PREFIX_.'extraimagen_plazo_entrega` plazo ON (a.id_plazo_entrega=plazo.id_plazo_entrega)
+            LEFT JOIN `'._DB_PREFIX_.'extraimagen_tipo_trabajo` tipo_trabajo ON (a.id_tipo_trabajo=tipo_trabajo.id_tipo_trabajo)
             ';
         // $this->_join = '
         //     LEFT JOIN `'._DB_PREFIX_.'category` cat ON (cat.id_category=a.id_pasta_category)
@@ -41,13 +45,26 @@ class CotizacionAdminController extends ModuleAdminController {
                         'class' => 'fixed-width-sm'],
             'phone' => ['title' => 'Teléfono',
                         'class' => 'fixed-width-sm'],
+            'id_product' => [    'title' => 'ID Producto', 
+                                'filter_key'=>'pl!name', 
+                                'class' => 'fixed-width-xs',
+                                'filer' => true,],
             'prod_name' => [    'title' => 'Producto', 
                                 'filter_key'=>'pl!name', 
                                 'filer' => true,],
-            'qty' => [  'title' => 'Cantidad',
+            'quantity' => [  'title' => 'Cantidad',
                         'class' => 'fixed-width-xs'],
-            'num_days' => [ 'title' => 'Plazo',
-                            'class' => 'fixed-width-xs'],
+            // 'id_plazo_entrega' => [ 'title' => 'Plazo',
+            //                 'class' => 'fixed-width-xs'],
+            'desc_plazo' => [ 'title' => 'Plazo',
+                            'class' => 'fixed-width-xs',
+                            'search' => false,],
+            'desc_tipo_trabajo' => [ 'title' => 'Tipo Trabajo',
+                            'class' => 'fixed-width-xs',
+                            'search' => false,],
+
+            'comment' => [ 'title' => 'Comentario',
+                            'search' => false,],
             // 'pastaName' => ['title' => 'Name', 'filter_key'=>'a!name'], // filter_key mandatory because "name" is ambiguous for SQL
             // 'categoryName' => ['title' => 'Category', 'filter_key'=>'cl!name'], // filter_key mandatory because JOIN
             'datetime' => ['title' => 'Fecha','type'=>'datetime'],
@@ -70,7 +87,7 @@ class CotizacionAdminController extends ModuleAdminController {
             ['name'=>'phone','type'=>'text','label'=>'Telefono'],
             ['name'=>'prod_name','type'=>'text','label'=>'Producto'],
             ['name'=>'id_product','type'=>'hidden','label'=>'id_product'],
-            ['name'=>'qty','type'=>'text','label'=>'Cantidad'],
+            ['name'=>'quantity','type'=>'text','label'=>'Cantidad'],
             ['name'=>'days','type'=>'text','label'=>'Plazo'],
             ['name'=>'comments','type'=>'text','label'=>'Comentarios'],
             ['name'=>'created','type'=>'datetime','label'=>'Fecha de solicitud'],

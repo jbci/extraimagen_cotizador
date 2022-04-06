@@ -1,3 +1,3 @@
-<p>
+<h2>
   Cotización de {$requested_product_name}
-</p>
+</h2>

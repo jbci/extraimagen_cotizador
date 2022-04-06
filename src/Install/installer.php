@@ -92,7 +92,7 @@ class Installer
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_solicitud_cotizacion`(
                 `id_cotizacion` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `email` VARCHAR(128), `phone` VARCHAR(15), `id_product` INT(10), 
-                `qty` INT(11), `days` INT(11), `colors` INT(11), `comment` varchar(512), `allow` INT(1), 
+                `quantity` INT(11), `id_plazo_entrega` INT(11), `id_tipo_trabajo` INT(11), `comment` varchar(512), `allow` INT(1), 
                 `replied` INT(1), `file` VARCHAR(256), `datetime` DATETIME NOT NULL default CURRENT_TIMESTAMP
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`(
@@ -111,6 +111,10 @@ class Installer
                 `id_tipo_trabajo` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `description` VARCHAR(256)
             ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_trabajo`(
+                `id_prod_trabajo` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `id_tipo_trabajo` INT(10), `id_product` INT(10), `price_factor` DOUBLE, `enabled` INT(1)
+                ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "INSERT INTO `ps_extraimagen_producto_plazo` (`id`, `id_plazo_entrega`, `id_product`, `price_factor`, `enabled`, `max_qty`) VALUES
             (1,	1,	17,	3,	1,	100),
             (2,	2,	17,	0,	0,	0),
@@ -143,9 +147,9 @@ class Installer
             (3,	18,	1,	6, 99.0),
             (4,	1,	1,	6, 99.0),
             (5,	2,	1,	100, 99.0);",
-            "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `qty`, `days`, `colors`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
+            "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `quantity`, `id_plazo_entrega`, `id_tipo_trabajo`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
             (1,	'user@extraimagen.cl',	'+56974471398',	17,	0,	0,	0,	'dfgdfgdsgsdfgdsfgsdfg',	0,  0,	'file',	'2022-04-04 16:14:10');",
-            "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `qty`, `days`, `colors`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
+            "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `quantity`, `id_plazo_entrega`, `id_tipo_trabajo`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
             (2,	'jordi.bari@gmail.com',	'974471398',	19,	100,	5,	2,	'comentatios de cotizacion',	1,	1,	NULL,	'2022-04-04 19:21:40');"
         ];
 
@@ -184,16 +188,16 @@ class Installer
             'extraimagen_tipo_trabajo',
             [
                 [
-                    'description' => '1 color',
+                    'description' => 'Impresión 1 color',
                 ],
                 [
-                    'description' => '2 colores',
+                    'description' => 'Impresión 2 colores',
                 ],
                 [
-                    'description' => 'full color',
+                    'description' => 'Impresión full color',
                 ],
                 [
-                    'description' => 'grabado laser',
+                    'description' => 'Grabado Laser',
                 ],
             ]
         );
@@ -248,14 +252,16 @@ class Installer
     {
 
         return (Configuration::updateValue('COTIZADOR_NAME', 'ExtraImagen')
-                && Configuration::updateValue('COTIZADOR_MESSAGE', 'Este mensaje se mostrará en el cotizador y debe configurarse en el administrador'));
+                && Configuration::updateValue('COTIZADOR_MESSAGE', 'Este mensaje se mostrará en el cotizador y debe configurarse en el administrador')
+                && Configuration::updateValue('COTIZADOR_STEPS_COLOR', '#455A64'));
     }
 
     private function removeConfiguration()
     {
 
         return (Configuration::deleteByName('COTIZADOR_NAME')
-                && Configuration::deleteByName('COTIZADOR_MESSAGE'));
+                && Configuration::deleteByName('COTIZADOR_MESSAGE')
+                && Configuration::deleteByName('COTIZADOR_STEPS_COLOR'));
 
     }
 
