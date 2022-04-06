@@ -23,7 +23,7 @@ declare(strict_types=1);
 // namespace cotizador\Install;
 
 // use Db;
-use Module;
+// use Module;
 
 /**
  * Class responsible for modifications needed during installation/uninstallation of the module.
