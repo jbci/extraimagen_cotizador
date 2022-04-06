@@ -20,6 +20,7 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
 // use src\Install\Installer;
+use Db;
 
 require_once _PS_MODULE_DIR_ . 'cotizador/src/Install/installer.php';
 
