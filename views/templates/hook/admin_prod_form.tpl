@@ -35,9 +35,9 @@
                             <td>
                                 Factor Incremento
                             </td>
-                            <td>
+                            {* <td>
                                 Cantidad Máxima
-                            </td>
+                            </td> *}
                         </tr>
                     </th>
                     {foreach from=$prod_plazos item=plazo}
@@ -57,9 +57,9 @@
                             <td>
                                 <input name="price_factor{$id_plazo_entrega}" id="price_factor{$id_plazo_entrega}" class="form-control" value="{$plazo["price_factor"]}" required>
                             </td>
-                            <td>
+                            {* <td>
                                 <input name="max_qty{$id_plazo_entrega}" id="max_qty{$id_plazo_entrega}" class="form-control" value="{$plazo["max_qty"]}" required>
-                            </td>
+                            </td> *}
                         </tr>
                     {/foreach}
                 </table>
@@ -100,6 +100,47 @@
                             </td>
                             <td>
                                 <input name="price_factor_tipo{$id_tipo_trabajo}" id="price_factor_tipo{$id_tipo_trabajo}" class="form-control" value="{$tipo["price_factor"]}" required>
+                            </td>
+                        </tr>
+                    {/foreach}
+                </table>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="formas_pago">
+                <h2>{l s='Formas de pago permitidas:' mod='cotizador'}</h2>
+            </label>
+            <div class="row">
+                <table>
+                    <thead>
+                        <tr>
+                            <td>
+                                Habilitado
+                            </td>
+                            <td>
+                                
+                            </td>
+                            <td>
+                                Factor Incremento
+                            </td>
+                        </tr>
+                    </th>
+                    {foreach from=$formas_pago item=forma_de_pago}
+                        <tr>
+                            {$id_forma_pago = "_{$forma_de_pago["id_forma_pago"]}"}
+                            <td>
+                            {if $forma_de_pago["enabled"] == 1}
+                                {$checked='checked'}
+                            {else}
+                                {$checked=''}
+                            {/if}
+                                <input type="checkbox" name="allow_forma_pago{$id_forma_pago}" id="allow_forma_pago{$id_forma_pago}" {$checked}>
+                            </td>
+                            <td>
+                                <label for="formas_pago">{$forma_de_pago["description"]}</label>
+                            </td>
+                            <td>
+                                <input name="price_factor_forma_pago{$id_forma_pago}" id="price_factor_forma_pago{$id_forma_pago}" class="form-control" value="{$forma_de_pago["price_factor"]}" required>
                             </td>
                         </tr>
                     {/foreach}

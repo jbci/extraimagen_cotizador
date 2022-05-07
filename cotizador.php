@@ -100,15 +100,25 @@ class Cotizador extends Module
             // retrieve the value set by the user
             $configValue = (string) Tools::getValue('COTIZADOR_MESSAGE');
             $configColorValue = (string) Tools::getValue('COTIZADOR_STEPS_COLOR');
+            $configLinkColorValue = (string) Tools::getValue('COTIZADOR_LINK_COLOR');
+            $configLoggedTextValue = (string) Tools::getValue('COTIZADOR_LINK_LOGGEDIN_TEXT');
+            $configNotLoggedTextValue = (string) Tools::getValue('COTIZADOR_LINK_NOT_LOGGEDIN_TEXT');
 
             // check that the value is valid
-            if (empty($configValue) || !Validate::isGenericName($configValue) || empty($configColorValue) || !Validate::isGenericName($configColorValue)) {
+            if (empty($configValue) || !Validate::isGenericName($configValue) 
+            || empty($configColorValue) || !Validate::isGenericName($configColorValue)
+            || empty($configLinkColorValue) || !Validate::isGenericName($configLinkColorValue)
+            || empty($configLoggedTextValue) || !Validate::isGenericName($configLoggedTextValue)
+            || empty($configNotLoggedTextValue) || !Validate::isGenericName($configNotLoggedTextValue)) {
                 // invalid value, show an error
                 $output = $this->displayError($this->l('Invalid Configuration value'));
             } else {
                 // value is ok, update it and display a confirmation message
                 Configuration::updateValue('COTIZADOR_MESSAGE', $configValue);
                 Configuration::updateValue('COTIZADOR_STEPS_COLOR', $configColorValue);
+                Configuration::updateValue('COTIZADOR_LINK_COLOR', $configLinkColorValue);
+                Configuration::updateValue('COTIZADOR_LINK_LOGGEDIN_TEXT', $configLoggedTextValue);
+                Configuration::updateValue('COTIZADOR_LINK_NOT_LOGGEDIN_TEXT', $configNotLoggedTextValue);
                 $output = $this->displayConfirmation($this->l('Settings updated'));
             }
         }
@@ -139,8 +149,29 @@ class Cotizador extends Module
                     ],
                     [
                         'type' => 'text',
-                        'label' => $this->l('Color'),
+                        'label' => $this->l('Steps Color'),
                         'name' => 'COTIZADOR_STEPS_COLOR',
+                        'size' => 10,
+                        'required' => true,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Link Color'),
+                        'name' => 'COTIZADOR_LINK_COLOR',
+                        'size' => 10,
+                        'required' => true,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Logged Text'),
+                        'name' => 'COTIZADOR_LINK_LOGGEDIN_TEXT',
+                        'size' => 10,
+                        'required' => true,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->l('Logged Text'),
+                        'name' => 'COTIZADOR_LINK_NOT_LOGGEDIN_TEXT',
                         'size' => 10,
                         'required' => true,
                     ],
@@ -167,6 +198,9 @@ class Cotizador extends Module
         // Load current value into the form
         $helper->fields_value['COTIZADOR_MESSAGE'] = Tools::getValue('COTIZADOR_MESSAGE', Configuration::get('COTIZADOR_MESSAGE'));
         $helper->fields_value['COTIZADOR_STEPS_COLOR'] = Tools::getValue('COTIZADOR_STEPS_COLOR', Configuration::get('COTIZADOR_STEPS_COLOR'));
+        $helper->fields_value['COTIZADOR_LINK_COLOR'] = Tools::getValue('COTIZADOR_LINK_COLOR', Configuration::get('COTIZADOR_LINK_COLOR'));
+        $helper->fields_value['COTIZADOR_LINK_LOGGEDIN_TEXT'] = Tools::getValue('COTIZADOR_LINK_LOGGEDIN_TEXT', Configuration::get('COTIZADOR_LINK_LOGGEDIN_TEXT'));
+        $helper->fields_value['COTIZADOR_LINK_NOT_LOGGEDIN_TEXT'] = Tools::getValue('COTIZADOR_LINK_NOT_LOGGEDIN_TEXT', Configuration::get('COTIZADOR_LINK_NOT_LOGGEDIN_TEXT'));
 
         return $helper->generateForm([$form]);
     }
@@ -189,16 +223,88 @@ class Cotizador extends Module
         // var_dump($params);die;
         $id_product = Tools::getValue('id_product');
         if (Tools::isSubmit('submit_cotizador')) {
+
+        //file upload code
+        if (isset($_FILES['fileUpload'])) 
+        {	
+            $target_dir = _PS_UPLOAD_DIR_;
+            $target_file = $target_dir . basename($_FILES['fileUpload']["name"]);	
+            $uploadOk = 1;
+            $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
+            // Check if image file is a actual image or fake image
+            if(isset($_POST["submit"])) 
+            {
+                $check = getimagesize($_FILES['fileUpload']["tmp_name"]);
+                if($check !== false) {
+                    echo "File is an image - " . $check["mime"] . ".";
+                    $uploadOk = 1;
+                } else {
+                    echo "File is not an image.";
+                    $uploadOk = 0;
+                }
+            }
+            // Check if file already exists
+            if (file_exists($target_file)) {
+                echo "Sorry, file already exists.";
+                $uploadOk = 0;
+            }
+            // Allow certain file formats
+            if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
+            && $imageFileType != "gif" ) {
+                echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
+                $uploadOk = 0;
+            }
+            // Check if $uploadOk is set to 0 by an error
+            if ($uploadOk == 0) {
+                echo "Sorry, your file was not uploaded.";
+            }
+            else 
+            {
+                if (move_uploaded_file($_FILES['fileUpload']["tmp_name"], $target_file)) 
+                {
+                    echo "The file ". basename($_FILES['fileUpload']["name"]). " has been uploaded.";
+                    $file_location = basename($_FILES['fileUpload']["name"]);
+                } 
+                else 
+                {
+                    echo "Sorry, there was an error uploading your file.";
+                }
+            }
+        }
+
+
+
             $email = Tools::getValue('email');
             $phone = Tools::getValue('phone');
             $extrai_work_days = (int)Tools::getValue('extrai_work_days');
             // Logger::addLog("hookDisplayAfterProductThumbs => extrai_work_days: {$extrai_work_days}");
-            $quantity = (int)Tools::getValue('quantity');
+            $quantity = (int)Tools::getValue('extrai_quantity');
             $extrai_work_type = (int)Tools::getValue('extrai_work_type');
             // Logger::addLog("hookDisplayAfterProductThumbs => extrai_work_type: {$extrai_work_type}");
             $comment = Tools::getValue('comment');
             $allow = (int)Tools::getValue('email_allow');
             $id_product = Tools::getValue('id_product');
+            $fileUpload =Tools::getValue('fileUpload');
+
+            //$customer->fileUpload = 'N/A';
+            // If you want the uploader as OPTIONAL, remove the comment of the line above.
+            // Logger::addLog($_FILES);
+            // $file = $_FILES['fileUpload'];
+            // $allowed = array('txt','rtf','doc','docx','pdf','png','jpeg','gif','jpg');
+            // $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            // if( file_exists($file['tmp_name'])&& in_array($extension, $allowed))
+            // {
+            //     $filename = uniqid()."-".basename($file['name']);
+            //     $filename = str_replace(' ','-', $filename);
+            //     $filename = strtolower($filename);
+            //     $filename = filter_var($filename, FILTER_SANITIZE_STRING);
+                
+            //     $file['name']= $filename;
+                
+            //     $uploader =newUploaderCore();
+            //     $uploader->upload($file);
+            // } 
+
             $insert = array(
                 'email' => pSQL($email),
                 'phone' => pSQL($phone),
@@ -207,7 +313,7 @@ class Cotizador extends Module
                 'id_plazo_entrega' => (int)$extrai_work_days,
                 'id_tipo_trabajo' => (int)$extrai_work_type,
                 'allow' => (int)$allow,
-                'file' => "file",
+                'file' => pSQL($fileUpload),
                 'comment' => pSQL($comment),
             );
 
@@ -247,6 +353,7 @@ class Cotizador extends Module
             'tipo_trabajos' => $this->getCotizadorProductoTrabajos($id_product),
             'base_price' => $this->getCotizadorProductoBasePrice($id_product),
             'steps_color' => Configuration::get('COTIZADOR_STEPS_COLOR'),
+            'formas_pago' => $this->getCotizadorProductoFormaPago($id_product),
         ]);
         // Logger::addLog("hookDisplayAfterProductThumbs => 2");
         // Logger::addLog("hookDisplayAfterProductThumbs id_product=> {$id_product}");
@@ -274,6 +381,7 @@ class Cotizador extends Module
                 'base_price' => $this->getCotizadorProductoBasePrice($id_product),
                 'prod_plazos' => $this->getCotizadorProductoPlazos($id_product),
                 'tipo_trabajos' => $this->getCotizadorProductoTrabajos($id_product),
+                'formas_pago' => $this->getCotizadorProductoFormaPago($id_product),
             ]);
 
             return $this->display(__FILE__, 'admin_prod_form.tpl');
@@ -360,6 +468,26 @@ class Cotizador extends Module
         }
     }
 
+    private function getCotizadorProductoFormaPago($id_product)
+    {
+        $request = "SELECT * FROM (
+                    SELECT b.*, a.id_product, a.price_factor, a.enabled FROM ps_extraimagen_producto_forma_pago a
+                                LEFT JOIN ps_extraimagen_forma_pago b ON a.id_forma_pago = b.id_forma_pago
+                    AND id_product = {$id_product}
+                                UNION
+                                SELECT b.*, a.id_product, a.price_factor, a.enabled FROM ps_extraimagen_producto_forma_pago a
+                                RIGHT JOIN ps_extraimagen_forma_pago b ON a.id_forma_pago = b.id_forma_pago
+                    AND id_product = {$id_product}) as s
+                    WHERE id_forma_pago IS NOT NULL;";
+
+        $result = Db::getInstance()->executeS($request);
+        if (!$result) {
+            $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+        } else {
+            return $result;
+        }
+    }
+
     public function hookActionProductUpdate($params)
     {
         $accept_value =(int)Tools::getValue('accept');
@@ -374,6 +502,7 @@ class Cotizador extends Module
             $this-> updateCotizadorProducto($params_id_product, $allow_cotizador, $min_qty, $base_price);
             $this-> updateProductoPlazo($params);
             $this-> updateProductoTipoTrabajo($params);
+            $this-> updateProductoFormaPago($params);
         }
     }
 
@@ -422,6 +551,7 @@ class Cotizador extends Module
         }
 
     }
+
     private function updateProductoTipoTrabajo($params)
     {
         // Logger::addLog("updateProductoTipoTrabajo start: ");
@@ -471,6 +601,54 @@ class Cotizador extends Module
 
     }
 
+    private function updateProductoFormaPago($params)
+    {
+        Logger::addLog("updateProductoFormaPago start: ");
+
+        $params_id_product = (int)$params['id_product'];
+
+        foreach ($this->getFormaPagoIds() as $id_forma_pago) {
+            Logger::addLog("updateProductoFormaPago id_forma_pago: {$id_forma_pago}");
+            
+            $price_factor = Tools::getValue("price_factor_forma_pago_{$id_forma_pago}");
+            Logger::addLog("updateProductoFormaPago price_factor_forma_pago_{$id_forma_pago}: {$price_factor}");
+            $allow_tipo = Tools::getValue("allow_forma_pago_{$id_forma_pago}");
+            Logger::addLog("updateProductoFormaPago allow_forma_pago_{$id_forma_pago}: {$allow_tipo}");
+            $enabled = 0;
+            if (isset($allow_tipo) && $allow_tipo == 'on'){
+                $enabled = 1;
+            }
+            
+            $query = "SELECT count(id_forma_pago) FROM `" . _DB_PREFIX_ . "extraimagen_producto_forma_pago` WHERE id_product = {$params_id_product} and id_forma_pago = {$id_forma_pago};";
+            Logger::addLog("updateProductoFormaPago query: {$query}");
+            $queryCount = (int)Db::getInstance()->getValue($query);
+
+            if ($queryCount > 0) {
+                Logger::addLog("updateProductoFormaPago => update");
+                $result = Db::getInstance()->update('extraimagen_producto_forma_pago', [
+                    'price_factor' => floatval($price_factor),
+                    'enabled' => (int)$enabled,
+                ], "id_product = {$params_id_product} AND id_forma_pago = {$id_forma_pago}", 1, true);
+                if (!$result) {
+                    $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+                }
+            } else {
+                Logger::addLog("updateProductoFormaPago => insert");
+                $result = Db::getInstance()->insert('extraimagen_producto_forma_pago', [
+                    'id_product' => (int)$params_id_product,
+                    'id_forma_pago' => (int)$id_forma_pago,
+                    'price_factor' => floatval($price_factor),
+                    'enabled' => (int)$enabled,
+                ]);
+                if (!$result) {
+                    $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+                }
+                
+            }
+            Logger::addLog("updateProductoFormaPago => foreach end");
+        }
+
+    }
     private function getPlazoIds()
     {
         $query = "SELECT id_plazo_entrega FROM " . _DB_PREFIX_ . "extraimagen_plazo_entrega LIMIT 100;";
@@ -502,6 +680,27 @@ class Cotizador extends Module
             $ids = array_map(function ($row) {
                 // Logger::addLog("getTipoTrabajoIds => id_tipo_trabajo : {$row['id_tipo_trabajo']} ");
                 return $row['id_tipo_trabajo'];
+            }, $results);
+        }
+
+        return $ids;
+    }
+
+    private function getFormaPagoIds()
+    {
+        // Logger::addLog("getFormaPagoIds => started ");
+        $query = "SELECT id_forma_pago FROM " . _DB_PREFIX_ . "extraimagen_forma_pago LIMIT 100;";
+        // Logger::addLog("getFormaPagoIds => query: {$query} ");
+        $results = Db::getInstance()->executeS($query);
+        $ids = [];
+        if (!$results) {
+            // Logger::addLog("getFormaPagoIds => if : not results ");
+            $this->context->controller->_errors[] = Tools::displayError('Error: ').mysql_error();
+        } else {
+            // Logger::addLog("getFormaPagoIds => if : results ");
+            $ids = array_map(function ($row) {
+                // Logger::addLog("getFormaPagoIds => id_forma_pago : {$row['id_forma_pago']} ");
+                return $row['id_forma_pago'];
             }, $results);
         }
 

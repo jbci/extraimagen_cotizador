@@ -115,6 +115,14 @@ class Installer
                 `id_prod_trabajo` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `id_tipo_trabajo` INT(10), `id_product` INT(10), `price_factor` DOUBLE, `enabled` INT(1)
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_forma_pago`(
+                `id_forma_pago` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `description` VARCHAR(256)
+            ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
+            "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_forma_pago`(
+                `id_prod_pago` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `id_forma_pago` INT(10), `id_product` INT(10), `price_factor` DOUBLE, `enabled` INT(1)
+            ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             // "INSERT INTO `ps_extraimagen_producto_plazo` (`id`, `id_plazo_entrega`, `id_product`, `price_factor`, `enabled`, `max_qty`) VALUES
             // (1,	1,	17,	3,	1,	100),
             // (2,	2,	17,	0,	0,	0),
@@ -202,7 +210,22 @@ class Installer
             ]
         );
 
-        return ($result_1 && $result_2);
+        $result_3 = Db::getInstance()->insert(
+            'extraimagen_forma_pago',
+            [
+                [
+                    'description' => 'Transferencia',
+                ],
+                [
+                    'description' => 'Orden de Compra a 30 días',
+                ],
+                [
+                    'description' => 'Orden de Compra a 60 días',
+                ],
+            ]
+        );
+
+        return ($result_1 && $result_2 && $result_3);
     }
 
     /**
@@ -218,6 +241,9 @@ class Installer
             "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_plazo_entrega`",
             "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_plazo`",
             "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_tipo_trabajo`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_trabajo`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_forma_pago`",
+            "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "extraimagen_producto_forma_pago`",
         ];
 
         return $this->executeQueries($queries);
@@ -234,6 +260,7 @@ class Installer
     {
         $hooks = [
             'displayAfterProductThumbs',
+            // 'displayProductAdditionalInfo',
             'displayAdminProductsExtra',
             'actionProductUpdate',
         ];
@@ -253,7 +280,11 @@ class Installer
 
         return (Configuration::updateValue('COTIZADOR_NAME', 'ExtraImagen')
                 && Configuration::updateValue('COTIZADOR_MESSAGE', 'Este mensaje se mostrará en el cotizador y debe configurarse en el administrador')
-                && Configuration::updateValue('COTIZADOR_STEPS_COLOR', '#455A64'));
+                && Configuration::updateValue('COTIZADOR_STEPS_COLOR', '#455A64')
+                && Configuration::updateValue('COTIZADOR_LINK_COLOR', '#455A64')
+                && Configuration::updateValue('COTIZADOR_LINK_LOGGEDIN_TEXT', 'Cotizar aquí')
+                && Configuration::updateValue('COTIZADOR_LINK_NOT_LOGGEDIN_TEXT', 'Registrarse para cotizar')
+            );
     }
 
     private function removeConfiguration()
@@ -261,7 +292,10 @@ class Installer
 
         return (Configuration::deleteByName('COTIZADOR_NAME')
                 && Configuration::deleteByName('COTIZADOR_MESSAGE')
-                && Configuration::deleteByName('COTIZADOR_STEPS_COLOR'));
+                && Configuration::deleteByName('COTIZADOR_STEPS_COLOR')
+                && Configuration::deleteByName('COTIZADOR_LINK_COLOR')
+                && Configuration::deleteByName('COTIZADOR_LINK_LOGGEDIN_TEXT')
+                && Configuration::deleteByName('COTIZADOR_LINK_NOT_LOGGEDIN_TEXT'));
 
     }
 

@@ -69,13 +69,14 @@
     overflow: hidden;
     color: #455A64;
     padding-left: 0px;
-    margin-top: 30px
+    margin-top: 30px;
+    align: center;
 }
 
 #progressbar li {
     list-style-type: none;
     font-size: 13px;
-    width: 14%;
+    width: 11%;
     float: left;
     position: relative;
     font-weight: 400
@@ -122,7 +123,8 @@
 #progressbar li:nth-child(4):after,
 #progressbar li:nth-child(5):after,
 #progressbar li:nth-child(6):after
-#progressbar li:nth-child(7):after  {
+#progressbar li:nth-child(7):after
+#progressbar li:nth-child(8):after  {
     left: -50%
 }
 
@@ -229,7 +231,7 @@
 }
 
 </style>
-
+{* {debug} *}
 <div id="myModal" class="modal">
   <span class="close cursor" onclick="closePopup()">&times;</span>
   <div class="modal-content">
@@ -255,10 +257,11 @@
                     <li onclick="gotoStep(5)" id="step_5" class="step0"></li>
                     <li onclick="gotoStep(6)" id="step_6" class="step0"></li>
                     <li onclick="gotoStep(7)" id="step_7" class="step0"></li>
+                    <li onclick="gotoStep(8)" id="step_8" class="step0"></li>
                 </ul>
             </div>
         </div>
-        <form action="" method="post" id="comment-form">
+        <form action="" method="post" id="comment-form" enctype="multipart/form-data">
           <div class="row d-flex justify-content-right">
             <div class="col-3">
               {include file="./tab1.tpl"}
@@ -268,6 +271,7 @@
               {include file="./tab5.tpl"}
               {include file="./tab6.tpl"}
               {include file="./tab7.tpl"}
+              {include file="./tab8.tpl"}
             </div>
           </div>
           <div class="row d-flex flex-row align-items-end">
@@ -313,7 +317,7 @@ function eachStep(step){
 var popupIsOpen = false;
 // When the user clicks on div, open the popup
 var stepStates = []
-var steps = [1,2,3,4,5,6,7]
+var steps = [1,2,3,4,5,6,7,8]
 steps.forEach(s =>  eachStep(s))
 var currentStep = 1;
 
@@ -366,12 +370,12 @@ function updateProgress() {
     var btn = document.getElementById("btn-next");
     var submit = document.getElementById("btn-submit");
 
-    if (currentStep == 6) {
+    if (currentStep == 7) {
       btn.hidden=true
       submit.hidden=false
       calcPrice()
     }
-    if (currentStep == 7) {
+    if (currentStep == 8) {
       btn.disabled = true;
     } else {
       btn.disabled = false;
@@ -397,13 +401,13 @@ function validateCurrentStep() {
   }
 
   if (currentStep == 2) {
-    if (document.getElementById('quantity').value == ""){
-      var ph_span = document.getElementById('qty_span')
+    if (document.getElementById('extrai_quantity').value == ""){
+      var ph_span = document.getElementById('qty_req_span')
       ph_span.textContent = "Campo requerido"
       return false
     } 
-    if (parseInt(document.getElementById('quantity').value) < {$min_qty}){
-      var ph_span = document.getElementById('qty_span')
+    if (parseInt(document.getElementById('extrai_quantity').value) < {$min_qty}){
+      var ph_span = document.getElementById('qty_req_span')
       ph_span.textContent = "Mínimo {$min_qty}"
       return false
     } 
@@ -426,9 +430,9 @@ function gotoStep(s) {
 function calcPrice() {
   var base_price = Number({$base_price});
   console.log(base_price)
-  var qty = Number(document.getElementById('quantity').value);
+  var qty = Number(document.getElementById('extrai_quantity').value);
   console.log(qty)
-  var select = document.getElementById('work_days')
+  var select = document.getElementById('extrai_work_days')
   var plazo_id = select.selectedOptions[0].value
   console.log(plazo_id)
   var prod_plazos_js = new Object();
@@ -451,6 +455,7 @@ function calcPrice() {
   var timeSpan = document.getElementById("time_span")
   timeSpan.textContent = prod_plazos_js[plazo_id.toString()].description
   var qtySpan = document.getElementById("qty_span")
+  console.log("qty: "+ qty.toString())
   qtySpan.textContent = qty.toString()
 
 }

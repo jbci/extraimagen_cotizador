@@ -1,15 +1,19 @@
 <!-- Block tab1 -->
   <div id="tab6" class="hidden_tab">
+  <div class="form-group">
+
+    <label for="fileUpload">{l s='Ssubir archivo'} </label>
+
+    <input type="hidden" name="MAX_FILE_SIZE" value="2000000"/>
+
+    <input type="file" class="form-control" id="fileUpload" name="fileUpload"/>
+
+</div>
     <p>
-      El precio para las siguientes características:
-      <ul>
-        <li>Producto: {$requested_product_name}</li>
-        <li>Cantidad: <span id="qty_span"> </span> </li>
-        <li>Plazo: <span id="time_span"> </span>  </li>
-      </ul>
-    </p>
-    <p>
-      Es de: $<span id="price_span"> </span>CLP
+      Comentarios:
+      </p>
+      <p>
+      <textarea class="text_area" name="comment" id="comment" rows="3" class="form-control" ></textarea>
     </p>
   </div>
 <!-- /Block cotizador -->
