@@ -2,7 +2,7 @@
   <div id="tab6" class="hidden_tab">
   <div class="form-group">
 
-    <label for="fileUpload">{l s='Ssubir archivo'} </label>
+    <label for="fileUpload">{l s='Ssubir archivo JPG, JPEG, PNG o GIF'} </label>
 
     <input type="hidden" name="MAX_FILE_SIZE" value="2000000"/>
 

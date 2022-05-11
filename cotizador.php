@@ -224,53 +224,34 @@ class Cotizador extends Module
         $id_product = Tools::getValue('id_product');
         if (Tools::isSubmit('submit_cotizador')) {
 
-        //file upload code
-        if (isset($_FILES['fileUpload'])) 
-        {	
-            $target_dir = _PS_UPLOAD_DIR_;
-            $target_file = $target_dir . basename($_FILES['fileUpload']["name"]);	
-            $uploadOk = 1;
-            $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
-            // Check if image file is a actual image or fake image
-            if(isset($_POST["submit"])) 
-            {
-                $check = getimagesize($_FILES['fileUpload']["tmp_name"]);
-                if($check !== false) {
-                    echo "File is an image - " . $check["mime"] . ".";
-                    $uploadOk = 1;
-                } else {
-                    echo "File is not an image.";
-                    $uploadOk = 0;
+            //file upload code
+            // unset($_FILES['fileUpload']);
+            if (isset($_FILES['fileUpload'])) 
+            {	
+                $target_dir = _PS_UPLOAD_DIR_;
+                $date   = new DateTime(); //this returns the current date time
+                $str_date = $date->format('Y_m_d_H_i_s') . "_";
+                $target_file = $target_dir . $str_date . basename($_FILES['fileUpload']["name"]);	
+                $uploadOk = 1;
+                $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
+                
+                if ($uploadOk == 0) {
+                    echo "Sorry, your file was not uploaded.";
                 }
-            }
-            // Check if file already exists
-            if (file_exists($target_file)) {
-                echo "Sorry, file already exists.";
-                $uploadOk = 0;
-            }
-            // Allow certain file formats
-            if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
-            && $imageFileType != "gif" ) {
-                echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-                $uploadOk = 0;
-            }
-            // Check if $uploadOk is set to 0 by an error
-            if ($uploadOk == 0) {
-                echo "Sorry, your file was not uploaded.";
-            }
-            else 
-            {
-                if (move_uploaded_file($_FILES['fileUpload']["tmp_name"], $target_file)) 
-                {
-                    echo "The file ". basename($_FILES['fileUpload']["name"]). " has been uploaded.";
-                    $file_location = basename($_FILES['fileUpload']["name"]);
-                } 
                 else 
                 {
-                    echo "Sorry, there was an error uploading your file.";
+                    if (move_uploaded_file($_FILES['fileUpload']["tmp_name"], $target_file)) 
+                    {
+                        echo "The file ". basename($_FILES['fileUpload']["name"]). " has been uploaded.";
+                        
+                        $file_location = basename($_FILES['fileUpload']["name"]);
+                    } 
+                    else 
+                    {
+                        echo "Sorry, there was an error uploading your file.";
+                    }
                 }
             }
-        }
 
 
 
@@ -280,30 +261,16 @@ class Cotizador extends Module
             // Logger::addLog("hookDisplayAfterProductThumbs => extrai_work_days: {$extrai_work_days}");
             $quantity = (int)Tools::getValue('extrai_quantity');
             $extrai_work_type = (int)Tools::getValue('extrai_work_type');
+            $extrai_forma_pago = (int)Tools::getValue('extrai_forma_pago');
             // Logger::addLog("hookDisplayAfterProductThumbs => extrai_work_type: {$extrai_work_type}");
             $comment = Tools::getValue('comment');
             $allow = (int)Tools::getValue('email_allow');
             $id_product = Tools::getValue('id_product');
-            $fileUpload =Tools::getValue('fileUpload');
-
-            //$customer->fileUpload = 'N/A';
-            // If you want the uploader as OPTIONAL, remove the comment of the line above.
-            // Logger::addLog($_FILES);
-            // $file = $_FILES['fileUpload'];
-            // $allowed = array('txt','rtf','doc','docx','pdf','png','jpeg','gif','jpg');
-            // $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            // if( file_exists($file['tmp_name'])&& in_array($extension, $allowed))
-            // {
-            //     $filename = uniqid()."-".basename($file['name']);
-            //     $filename = str_replace(' ','-', $filename);
-            //     $filename = strtolower($filename);
-            //     $filename = filter_var($filename, FILTER_SANITIZE_STRING);
-                
-            //     $file['name']= $filename;
-                
-            //     $uploader =newUploaderCore();
-            //     $uploader->upload($file);
-            // } 
+            if (isset($target_file)) {
+                $fileUpload = $target_file;
+            } else {
+                $fileUpload = "";
+            }
 
             $insert = array(
                 'email' => pSQL($email),
@@ -312,6 +279,7 @@ class Cotizador extends Module
                 'quantity' => (int)$quantity,
                 'id_plazo_entrega' => (int)$extrai_work_days,
                 'id_tipo_trabajo' => (int)$extrai_work_type,
+                'id_forma_pago' => (int)$extrai_forma_pago,
                 'allow' => (int)$allow,
                 'file' => pSQL($fileUpload),
                 'comment' => pSQL($comment),

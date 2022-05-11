@@ -1,12 +1,14 @@
 <?php
 // use Context;
-// require_once _PS_ROOT_DIR_.'/override/classes/my_dir/Pasta.php';
+
+require_once _PS_ROOT_DIR_.'/modules/cotizador/src/classes/solicitud_cotizacion.php';
 
 class CotizacionAdminController extends ModuleAdminController {
     public function __construct(){
         parent::__construct();
         // Base
         $this->bootstrap = true; // use Bootstrap CSS
+        $this->className = 'SolicitudCotizacion'; // SQL table name, will be prefixed with _DB_PREFIX_
         $this->table = 'extraimagen_solicitud_cotizacion'; // SQL table name, will be prefixed with _DB_PREFIX_
         $this->identifier = 'id_cotizacion'; // SQL column to be used as primary key
         //   $this->className = 'Pasta'; // PHP class name
@@ -15,14 +17,15 @@ class CotizacionAdminController extends ModuleAdminController {
         $this->_defaultOrderBy = 'a.id_cotizacion'; // the table alias is always `a`
         $this->_defaultOrderWay = 'DESC';
         $this->_select = 'a.id_cotizacion as `id`, a.id_cotizacion as `id_cotizacion`, a.replied as `replied`, a.email as `email`, a.phone as `phone`, pl.name as `prod_name`
-        , a.id_product as `id_product`, a.quantity as `quantity` , a.id_plazo_entrega as `id_plazo_entrega` , a.datetime as `datetime`
-        , plazo.description as `desc_plazo`, tipo_trabajo.description as `desc_tipo_trabajo`, a.comment as `comment`
+        , a.id_product as `id_product`, a.quantity as `quantity` , a.id_plazo_entrega as `id_plazo_entrega` , a.id_forma_pago as `id_forma_pago` , a.datetime as `datetime`, a.file as `file`
+        , plazo.description as `desc_plazo`, tipo_trabajo.description as `desc_tipo_trabajo`, forma_pago.description as `desc_forma_pago`, a.comment as `comment`
         ';
         $this->_join = '
             LEFT JOIN `'._DB_PREFIX_.'product` prod ON (prod.id_product=a.id_product)
             LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (prod.id_product=pl.id_product and prod.id_shop_default=pl.id_shop)
             LEFT JOIN `'._DB_PREFIX_.'extraimagen_plazo_entrega` plazo ON (a.id_plazo_entrega=plazo.id_plazo_entrega)
             LEFT JOIN `'._DB_PREFIX_.'extraimagen_tipo_trabajo` tipo_trabajo ON (a.id_tipo_trabajo=tipo_trabajo.id_tipo_trabajo)
+            LEFT JOIN `'._DB_PREFIX_.'extraimagen_forma_pago` forma_pago ON (a.id_forma_pago=forma_pago.id_forma_pago)
             ';
         // $this->_join = '
         //     LEFT JOIN `'._DB_PREFIX_.'category` cat ON (cat.id_category=a.id_pasta_category)
@@ -56,24 +59,27 @@ class CotizacionAdminController extends ModuleAdminController {
                         'class' => 'fixed-width-xs'],
             // 'id_plazo_entrega' => [ 'title' => 'Plazo',
             //                 'class' => 'fixed-width-xs'],
+            'desc_forma_pago' => [ 'title' => 'Forma de pago',
+                                'class' => 'fixed-width-xs',
+                                'search' => false,],
             'desc_plazo' => [ 'title' => 'Plazo',
                             'class' => 'fixed-width-xs',
                             'search' => false,],
             'desc_tipo_trabajo' => [ 'title' => 'Tipo Trabajo',
                             'class' => 'fixed-width-xs',
                             'search' => false,],
+            'file' => [ 'title' => 'Archivo',
+                            'class' => 'fixed-width-xs',
+                            'search' => false,
+                            'callback' => 'downloadButton',
+                        ],
 
             'comment' => [ 'title' => 'Comentario',
                             'search' => false,],
-            // 'pastaName' => ['title' => 'Name', 'filter_key'=>'a!name'], // filter_key mandatory because "name" is ambiguous for SQL
-            // 'categoryName' => ['title' => 'Category', 'filter_key'=>'cl!name'], // filter_key mandatory because JOIN
             'datetime' => ['title' => 'Fecha','type'=>'datetime'],
         ];
-        // Read & update record
-        // $this->addRowAction('details');
-        // $this->addRowAction('edit');
+
         $this->addRowAction('markCompleted');
-        // $categories = Category::getCategories($this->context->language->id, $active=true, $order=false); // [0=>[id_category=>X,name=>Y]..]
 
         $this->fields_form = [
         'legend' => [
@@ -82,19 +88,55 @@ class CotizacionAdminController extends ModuleAdminController {
         ],
         'input' => [
             ['name'=>'info','type'=>'html','html_content'=>'<div class="alert alert-warning">Campos no modificables</div>'],
-            ['name'=>'replied','type'=>'text','label'=>'Contestado'],
+            ['name'=>'id_cotizacion','type'=>'text','label'=>'ID COTIZACIÓN'],
             ['name'=>'email','type'=>'text','label'=>'Email'],
             ['name'=>'phone','type'=>'text','label'=>'Telefono'],
-            ['name'=>'prod_name','type'=>'text','label'=>'Producto'],
+            ['name'=>'prod_name','type'=>'text','label'=>'Producto', 'callback'=> "prod"],
             ['name'=>'id_product','type'=>'hidden','label'=>'id_product'],
             ['name'=>'quantity','type'=>'text','label'=>'Cantidad'],
-            ['name'=>'days','type'=>'text','label'=>'Plazo'],
-            ['name'=>'comments','type'=>'text','label'=>'Comentarios'],
-            ['name'=>'created','type'=>'datetime','label'=>'Fecha de solicitud'],
+            ['name'=>'id_plazo_entrega','type'=>'text','label'=>'Plazo'],
+            ['name'=>'comment','type'=>'text','label'=>'Comentarios'],
+            ['name'=>'file','type'=>'text','label'=>'Archivo'],
+            ['name'=>'datetime','type'=>'datetime','label'=>'Fecha de solicitud'],
 
             ],
         ];
+
+        
     }
+
+    public function renderForm(){
+        $this->context = Context::getContext();
+        $this->context->controller = $this;
+        $row =  $this->context;
+        $obj = $this->loadObject(true);
+        if (!($obj)) {
+            return;
+            }
+        else {
+            Logger::addLog("detail form");
+            // Logger::addLog((string)$row);
+            // var_dump($row);die;
+        }
+        $solicitud = $obj; // get invoice
+        // Logger::addLog($solicitud->email);
+        // $order = $invoice->getOrder(); // get order
+        // $customer = $order->getCustomer(); // get customer
+        // $currency = new Currency($order->id_currency); // get currency
+        // add some info in an HTML string
+        $info = '<div class="panel">';
+        $info .= '<div class="panel-heading"><i class="icon-list-ul"></i> Datos de la solicitud </div>';
+        // $info .= "Id Solicitud: {$solicitud->email}<br/>";
+        // $info .= "Customer: {$customer->firstname} {$customer->lastname}<br/>";
+        // $info .= "Total_paid : ".Tools::displayPrice($order->total_paid, $currency)."<br/>";
+        // $info .= "Get total paid : ".Tools::displayPrice($order->getTotalPaid(), $currency)."<br/>";
+        // $info .= "Payment: {$order->payment}<br/>";
+        // $info .= "Order state : {$order->getCurrentOrderState()->name[$this->context->language->id]}";
+        $info .= '</div>';
+        // push the HTML to $this->content
+        $this->content .= $info;
+        return parent::renderForm();
+      }
 
     public function viewMyButton($value, $form)
     {
@@ -106,6 +148,20 @@ class CotizacionAdminController extends ModuleAdminController {
             return '<span style="background-color : #00FF00; color : #000000; border-radius : 2px/2px"> COMPLETADO </span>';
         } else {
             return '<span style="background-color : #FF0000; color : #000000; border-radius : 2px/2px"> PENDIENTE </span>';
+        }
+        
+    }
+
+    public function downloadButton($value, $form)
+    {
+        // Logger::addLog("viewMyButton => started");
+        // Logger::addLog($value);
+        // Logger::addLog($form);
+        // var_dump($form);die;
+        if ($form["file"]== ""){
+            return '';
+        } else {
+            return '<a href="http://5.161.82.244/prestashop/upload/2022_05_07_16_26_30_choose.png" target="_blank"><span style="background-color : #FFFFFF; color : #000000; border-radius : 2px/2px"> Descargar </span><a>';
         }
         
     }

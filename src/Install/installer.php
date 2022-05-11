@@ -92,7 +92,7 @@ class Installer
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_solicitud_cotizacion`(
                 `id_cotizacion` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `email` VARCHAR(128), `phone` VARCHAR(15), `id_product` INT(10), 
-                `quantity` INT(11), `id_plazo_entrega` INT(11), `id_tipo_trabajo` INT(11), `comment` varchar(512), `allow` INT(1), 
+                `quantity` INT(11), `id_plazo_entrega` INT(11), `id_tipo_trabajo` INT(11), `id_forma_pago` INT(11), `comment` varchar(512), `allow` INT(1), 
                 `replied` INT(1), `file` VARCHAR(256), `datetime` DATETIME NOT NULL default CURRENT_TIMESTAMP
                 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
             "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "extraimagen_cotizador_producto`(
@@ -123,42 +123,41 @@ class Installer
                 `id_prod_pago` INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `id_forma_pago` INT(10), `id_product` INT(10), `price_factor` DOUBLE, `enabled` INT(1)
             ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;",
-            // "INSERT INTO `ps_extraimagen_producto_plazo` (`id`, `id_plazo_entrega`, `id_product`, `price_factor`, `enabled`, `max_qty`) VALUES
-            // (1,	1,	17,	3,	1,	100),
-            // (2,	2,	17,	0,	0,	0),
-            // (3,	3,	17,	0,	0,	0),
-            // (4,	4,	17,	0,	0,	0),
-            // (5,	5,	17,	0,	0,	0),
-            // (6,	1,	19,	4,	1,	4),
-            // (7,	2,	19,	4,	1,	4),
-            // (8,	3,	19,	0,	0,	0),
-            // (9,	4,	19,	0,	0,	0),
-            // (10,	5,	19,	0,	0,	0),
-            // (11,	1,	18,	0,	0,	0),
-            // (12,	2,	18,	0,	0,	0),
-            // (13,	3,	18,	0,	0,	0),
-            // (14,	4,	18,	6,	1,	6),
-            // (15,	5,	18,	0,	0,	0),
-            // (16,	1,	1,	6,	1,	6),
-            // (17,	2,	1,	0,	0,	0),
-            // (18,	3,	1,	0,	0,	0),
-            // (19,	4,	1,	0,	0,	0),
-            // (20,	5,	1,	0,	0,	0),
-            // (21,	1,	2,	3,	1,	100),
-            // (22,	2,	2,	0,	0,	0),
-            // (23,	3,	2,	0,	0,	0),
-            // (24,	4,	2,	0,	0,	0),
-            // (25,	5,	2,	0,	0,	0);",
-            // "INSERT INTO `ps_extraimagen_cotizador_producto` (`id_cotizador_producto`, `id_product`, `enabled`, `min_qty`, `base_price`) VALUES
-            // (1,	17,	1,	100, 99.0),
-            // (2,	19,	1,	4, 99.0),
-            // (3,	18,	1,	6, 99.0),
-            // (4,	1,	1,	6, 99.0),
-            // (5,	2,	1,	100, 99.0);",
-            // "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `quantity`, `id_plazo_entrega`, `id_tipo_trabajo`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
-            // (1,	'user@extraimagen.cl',	'+56974471398',	17,	0,	0,	0,	'dfgdfgdsgsdfgdsfgsdfg',	0,  0,	'file',	'2022-04-04 16:14:10');",
-            // "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `quantity`, `id_plazo_entrega`, `id_tipo_trabajo`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
-            // (2,	'jordi.bari@gmail.com',	'974471398',	19,	100,	5,	2,	'comentatios de cotizacion',	1,	1,	NULL,	'2022-04-04 19:21:40');"
+
+            // Next Inserts for development purposes only
+            "INSERT INTO `ps_extraimagen_cotizador_producto` (`id_cotizador_producto`, `id_product`, `enabled`, `min_qty`, `base_price`) VALUES
+            (1,	18,	1,	100,	100),
+            (2,	5,	1,	100,	100);",
+            "INSERT INTO `ps_extraimagen_producto_forma_pago` (`id_prod_pago`, `id_forma_pago`, `id_product`, `price_factor`, `enabled`) VALUES
+                (1,	1,	18,	2,	1),
+                (2,	2,	18,	0,	0),
+                (3,	3,	18,	0,	0),
+                (4,	1,	5,	2,	1),
+                (5,	2,	5,	0,	0),
+                (6,	3,	5,	0,	0);",
+            "INSERT INTO `ps_extraimagen_producto_plazo` (`id`, `id_plazo_entrega`, `id_product`, `price_factor`, `enabled`, `max_qty`) VALUES
+                (1,	1,	18,	2,	1,	0),
+                (2,	2,	18,	0,	0,	0),
+                (3,	3,	18,	0,	0,	0),
+                (4,	4,	18,	0,	0,	0),
+                (5,	5,	18,	0,	0,	0),
+                (6,	1,	5,	2,	1,	0),
+                (7,	2,	5,	0,	0,	0),
+                (8,	3,	5,	0,	0,	0),
+                (9,	4,	5,	0,	0,	0),
+                (10,5,	5,	0,	0,	0);",
+            "INSERT INTO `ps_extraimagen_producto_trabajo` (`id_prod_trabajo`, `id_tipo_trabajo`, `id_product`, `price_factor`, `enabled`) VALUES
+                (1,	1,	18,	2,	1),
+                (2,	2,	18,	0,	0),
+                (3,	3,	18,	0,	0),
+                (4,	4,	18,	0,	0),
+                (5,	1,	5,	2,	1),
+                (6,	2,	5,	0,	0),
+                (7,	3,	5,	0,	0),
+                (8,	4,	5,	0,	0);",
+            "INSERT INTO `ps_extraimagen_solicitud_cotizacion` (`id_cotizacion`, `email`, `phone`, `id_product`, `quantity`, `id_plazo_entrega`, `id_tipo_trabajo`, `id_forma_pago`, `comment`, `allow`, `replied`, `file`, `datetime`) VALUES
+            (1,	'user@extraimagen.cl',	'+56974471398',	18,	100,	1,	1,	1,	'',	0,	NULL,	'/var/www/html/prestashop/upload/2022_05_10_09_10_28_',	'2022-05-10 13:10:28'),
+            (2,	'user@extraimagen.cl',	'+56974471398',	18,	100,	1,	1,	1,	'',	0,	NULL,	'/var/www/html/prestashop/upload/2022_05_10_09_10_53_choose.png',	'2022-05-10 13:10:53');"    
         ];
 
         return ($this->executeQueries($queries) && $this->populateDatabase());
