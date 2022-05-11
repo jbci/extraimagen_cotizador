@@ -31,11 +31,11 @@ class SolicitudCotizacion extends ObjectModel
             'id_plazo_entrega' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true),
             'id_tipo_trabajo' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true),
             'id_forma_pago' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true),
-            'comment'      => array('type' => self::TYPE_STRING, 'validate' => 'isMessage', 'size' => 100, 'required' => true),
+            'comment'      => array('type' => self::TYPE_STRING, 'validate' => 'isMessage', 'size' => 100, 'required' => false),
             'allow' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true),
             'replied' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => false),
-            'file'      => array('type' => self::TYPE_STRING, 'validate' => 'isFileName', 'size' => 100, 'required' => true),
-            'datetime'      => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat', 'size' => 100, 'required' => true),
+            'file'      => array('type' => self::TYPE_STRING, 'validate' => 'isFileName', 'size' => 100, 'required' => false),
+            'datetime'      => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat', 'size' => 100, 'required' => false),
 
         ),
     );

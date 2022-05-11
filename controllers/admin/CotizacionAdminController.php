@@ -98,7 +98,6 @@ class CotizacionAdminController extends ModuleAdminController {
             ['name'=>'comment','type'=>'text','label'=>'Comentarios'],
             ['name'=>'file','type'=>'text','label'=>'Archivo'],
             ['name'=>'datetime','type'=>'datetime','label'=>'Fecha de solicitud'],
-
             ],
         ];
 

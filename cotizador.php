@@ -231,24 +231,33 @@ class Cotizador extends Module
                 $target_dir = _PS_UPLOAD_DIR_;
                 $date   = new DateTime(); //this returns the current date time
                 $str_date = $date->format('Y_m_d_H_i_s') . "_";
-                $target_file = $target_dir . $str_date . basename($_FILES['fileUpload']["name"]);	
+                $tmp_file = basename($_FILES['fileUpload']["name"]);
+                Logger::addLog("hookDisplayAfterProductThumbs => file start");
+                if (isset($tmp_file) && $tmp_file != "") {
+                    Logger::addLog("not empty: " . $tmp_file);
+                    // Logger::addLog($tmp_file);
+                } else {
+                    Logger::addLog("empty");
+                }
+                
+                Logger::addLog("hookDisplayAfterProductThumbs => file end");
+                $target_file = $target_dir . $str_date . $tmp_file;	
                 $uploadOk = 1;
                 $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
                 
                 if ($uploadOk == 0) {
-                    echo "Sorry, your file was not uploaded.";
+                    Logger::addLog("Sorry, your file was not uploaded.");
                 }
                 else 
                 {
                     if (move_uploaded_file($_FILES['fileUpload']["tmp_name"], $target_file)) 
                     {
-                        echo "The file ". basename($_FILES['fileUpload']["name"]). " has been uploaded.";
-                        
+                        Logger::addLog("The file ". basename($_FILES['fileUpload']["name"]). " has been uploaded.");
                         $file_location = basename($_FILES['fileUpload']["name"]);
                     } 
                     else 
                     {
-                        echo "Sorry, there was an error uploading your file.";
+                        Logger::addLog("Sorry, there was an error uploading your file.");
                     }
                 }
             }
@@ -266,7 +275,7 @@ class Cotizador extends Module
             $comment = Tools::getValue('comment');
             $allow = (int)Tools::getValue('email_allow');
             $id_product = Tools::getValue('id_product');
-            if (isset($target_file)) {
+            if (isset($tmp_file) && $tmp_file != "") {
                 $fileUpload = $target_file;
             } else {
                 $fileUpload = "";
